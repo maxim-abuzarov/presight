@@ -7,6 +7,7 @@ export const config = {
   isProduction: process.env.NODE_ENV === 'production',
   port: Number(process.env.PORT ?? 7777),
   dbPath: process.env.DB_PATH ?? path.join(packageRoot, 'data', 'presight.db'),
+  dbReadOnly: process.env.DB_READONLY === '1',
   clientDist: process.env.CLIENT_DIST ?? path.join(packageRoot, '..', 'client', 'dist'),
   seedUserCount: Number(process.env.SEED_USER_COUNT ?? 10_000),
   defaultPageSize: 50,

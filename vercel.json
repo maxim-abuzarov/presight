@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build && npm run seed && npm run seal",
+  "outputDirectory": "client/dist",
+  "framework": null,
+  "env": {
+    "DB_READONLY": "1"
+  },
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "server/{dist,data}/**"
+    }
+  },
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
+}

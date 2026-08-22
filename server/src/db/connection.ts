@@ -18,14 +18,18 @@ export function getDb(): DatabaseSync {
   if (instance) return instance;
 
   const target = overridePath ?? config.dbPath;
-  if (target !== ':memory:') {
+  const readOnly = config.dbReadOnly && target === config.dbPath;
+
+  if (target !== ':memory:' && !readOnly) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
   }
 
-  const db = new DatabaseSync(target);
-  db.exec('PRAGMA journal_mode = WAL');
+  const db = new DatabaseSync(target, { readOnly });
   db.exec('PRAGMA foreign_keys = ON');
-  db.exec('PRAGMA synchronous = NORMAL');
+  if (!readOnly) {
+    db.exec('PRAGMA journal_mode = WAL');
+    db.exec('PRAGMA synchronous = NORMAL');
+  }
 
   instance = db;
   return db;

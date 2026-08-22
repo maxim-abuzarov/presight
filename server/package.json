@@ -13,7 +13,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "migrate": "tsx src/index.ts migrate",
-    "seed": "tsx src/index.ts seed"
+    "seed": "tsx src/index.ts seed",
+    "seal": "tsx src/index.ts seal"
   },
   "dependencies": {
     "@faker-js/faker": "~9.6.0",

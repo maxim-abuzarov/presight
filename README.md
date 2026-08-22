@@ -4,11 +4,39 @@ A searchable, filterable directory of 10,000 people. Type a name, narrow by nati
 
 Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md).
 
+---
+
+## Quick start
+
+```bash
+docker compose up --build
+```
+
+Open **http://localhost:7777**. That is the whole setup — no Node install, no seeding step. The container seeds itself on first boot and skips it afterwards.
+
+Prefer to run it directly? You need **Node 22.5 or newer** (`.nvmrc` pins 24.15.0):
+
+```bash
+nvm use
+npm install
+npm run seed     # creates server/data/presight.db
+npm run dev
+```
+
+| | |
+|---|---|
+| Client | http://localhost:5555 |
+| API | http://localhost:7777 |
+
+`npm run dev` runs both processes together; Vite proxies `/api` to the server, so the client always calls same-origin paths. Run them apart with `npm run dev:server` and `npm run dev:client`.
+
+If you start the server on an older Node it exits with an explanation rather than a stack trace — the API uses the built-in `node:sqlite` module, which does not exist before 22.5.
+
+---
+
 - **React 19** client — URL-synced state, virtualized infinite list, light and dark themes
 - **Express 5** API — paginated, filtered, sorted, with live facet counts
 - **SQLite** as the source of truth, through Node's built-in `node:sqlite` (no native modules)
-
----
 
 ## Architecture
 
@@ -18,33 +46,6 @@ The design turns on one decision. `buildFilterSql()` is the only place that know
 
 Dependencies point one way — `schema → service → repository → connection` — and nothing below the HTTP boundary imports Express or zod, which is why the service can be tested by calling a function instead of standing up a server.
 
----
-
-## Requirements
-
-- **Node 22.5 or newer.** The API uses the built-in `node:sqlite` module, which does not exist in earlier versions. `.nvmrc` pins 24.15.0, so `nvm use` picks the right one.
-- npm 10+
-
-If you start the server on an older Node it exits with an explanation rather than a stack trace.
-
-## Setup
-
-```bash
-nvm use          # or make sure `node -v` is >= 22.5
-npm install
-npm run seed     # creates server/data/presight.db — ~10,000 users in about 200ms
-npm run dev
-```
-
-| | |
-|---|---|
-| Client | http://localhost:5555 |
-| API | http://localhost:7777 |
-
-`npm run dev` runs both processes together. Vite proxies `/api` to the server, so the client always calls same-origin paths.
-
-Run them separately with `npm run dev:server` and `npm run dev:client`.
-
 ## Database
 
 SQLite, at `server/data/presight.db` (gitignored — recreate it with `npm run seed`).
@@ -52,11 +53,14 @@ SQLite, at `server/data/presight.db` (gitignored — recreate it with `npm run s
 ```bash
 npm run seed                       # wipe and re-seed, deterministic
 SEED_USER_COUNT=500 npm run seed   # a smaller set
+npm run seal                       # collapse to a single read-only-safe file
 rm -rf server/data && npm run seed # rebuild from nothing
 sqlite3 server/data/presight.db    # inspect it
 ```
 
 The seed is deterministic — every Faker instance is explicitly seeded, so re-running produces byte-identical data and a failing test always reproduces.
+
+`seal` exists for read-only deployments. The database normally runs in WAL mode, which is a three-file format: SQLite must write `presight.db-shm` even to serve a `SELECT`, so a WAL database on a read-only filesystem is not slow — it is unreadable. `seal` checkpoints the WAL back into the main file, switches to a rollback journal, vacuums, and removes the sidecars, leaving one self-contained file. A later writable boot restores WAL on its own.
 
 Four tables. Hobbies are a join table rather than a JSON column, because the brief needs *"has all of these hobbies"* matching and per-hobby counts over a filtered set — both a few lines of SQL against a join table, and slow, awkward string work against a blob.
 
@@ -81,19 +85,7 @@ One origin, one process. Deep links work: any non-API GET falls through to the c
 ## Docker
 
 ```bash
-docker compose up --build
-```
-
-That is the whole setup — no Node install, no seeding step. Open http://localhost:7777.
-
-The container seeds itself on first boot and skips it afterwards, so the database survives restarts:
-
-```
-Seeded 10000 users and 43448 hobby links into /data/presight.db in 154ms.
-API listening on http://localhost:7777
-```
-
-```bash
+docker compose up --build    # http://localhost:7777
 docker compose down          # stop; the volume keeps the data
 docker compose down -v       # stop and delete the database
 docker compose up -d         # background
@@ -110,6 +102,19 @@ docker compose logs -f app   # follow
 The image ships only production dependencies and compiled output — no `tsx`, no `typescript`, no source. Because SQLite comes from Node's built-in `node:sqlite`, there is no native module to compile and the image needs no build toolchain.
 
 Set `SEED_ON_START=always` to force a re-seed on every boot, or override `SEED_USER_COUNT` for a smaller dataset.
+
+## Deploying
+
+Any container host runs the [Dockerfile](Dockerfile) unchanged, with a volume mounted at `/data`. That path keeps the deployed app byte-identical to what `docker compose up` gives you, and the database stays writable.
+
+Vercel is also supported, via [vercel.json](vercel.json) and [api/index.mjs](api/index.mjs) — the static client and the Express app are served from one origin, so the client needs no base path, no API URL and no CORS.
+
+```bash
+vercel          # preview
+vercel --prod
+```
+
+Import it with **Framework Preset: Other** and an empty Build Command; `vercel.json` supplies everything. It builds, seeds and seals the database at build time and ships the 3.4MB file inside the function bundle, then opens it read-only (`DB_READONLY=1`, set in `vercel.json`). The data is therefore immutable — re-seeding means redeploying, which is fine for a read-only directory. Note that GitHub Pages cannot host this app: it serves static files only, and there would be no `/api` behind the client.
 
 ---
 
@@ -167,7 +172,7 @@ Two easter eggs: search `presight`, or `peter parker`.
 ## Tests
 
 ```bash
-npm test         # 43 tests, ~450ms
+npm test         # 43 tests
 npm run typecheck
 ```
 
@@ -182,9 +187,11 @@ client/src
 └── components/     UserList, UserCard, FilterSidebar, SearchField, …
 
 server/src
-├── index.ts        guarded entry point: serve · seed · migrate
-├── db/             connection, schema, seed, vocabularies
+├── index.ts        guarded entry point: serve · seed · seal · migrate
+├── db/             connection, schema, seed, seal, vocabularies
 └── users/          routes → controller → service → repository → filters
+
+api/index.mjs       Vercel entrypoint — exports the same Express app
 ```
 
 ## Configuration
@@ -195,6 +202,7 @@ Every setting has a working default, so there is no `.env` to create.
 |---|---|
 | `PORT` | `7777` |
 | `DB_PATH` | `server/data/presight.db` |
+| `DB_READONLY` | unset — set to `1` to open the database read-only and skip migrations |
 | `CLIENT_DIST` | `client/dist` |
 | `SEED_USER_COUNT` | `10000` |
 | `NODE_ENV` | unset (development) |

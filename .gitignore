@@ -38,3 +38,6 @@ yarn-error.log*
 
 # design-review screenshots (process output, not a deliverable)
 .impeccable/
+
+# vercel
+.vercel/

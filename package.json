@@ -15,6 +15,7 @@
     "dev:client": "npm -w app-client run dev",
     "build": "npm -w app-client run build && npm -w app-server run build",
     "seed": "npm -w app-server run seed",
+    "seal": "npm -w app-server run seal",
     "test": "npm -w app-server run test",
     "typecheck": "npm -w app-server run typecheck && npm -w app-client run typecheck",
     "start": "npm -w app-server run start"
@@ -23,6 +24,6 @@
     "concurrently": "~9.1.2"
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": "24.x"
   }
 }
