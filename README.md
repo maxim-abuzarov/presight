@@ -1,5 +1,9 @@
 # People Directory
 
+### → [presight-one.vercel.app](https://presight-one.vercel.app)
+
+Live, with all 10,000 records. Nothing to install.
+
 A searchable, filterable directory of 10,000 people. Type a name, narrow by nationality and hobbies, and the sidebar always shows the top 20 of each **for the result set you are currently looking at** — with counts that match what selecting them returns.
 
 Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md).
@@ -7,6 +11,10 @@ Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md).
 ---
 
 ## Quick start
+
+Nothing to run — it is deployed at **[presight-one.vercel.app](https://presight-one.vercel.app)**.
+
+To run it yourself:
 
 ```bash
 docker compose up --build
@@ -107,7 +115,7 @@ Set `SEED_ON_START=always` to force a re-seed on every boot, or override `SEED_U
 
 Any container host runs the [Dockerfile](Dockerfile) unchanged, with a volume mounted at `/data`. That path keeps the deployed app byte-identical to what `docker compose up` gives you, and the database stays writable.
 
-Vercel is also supported, via [vercel.json](vercel.json) and [api/index.mjs](api/index.mjs) — the static client and the Express app are served from one origin, so the client needs no base path, no API URL and no CORS.
+Vercel is what [presight-one.vercel.app](https://presight-one.vercel.app) runs on, via [vercel.json](vercel.json) and [api/index.mjs](api/index.mjs) — the static client and the Express app are served from one origin, so the client needs no base path, no API URL and no CORS.
 
 ```bash
 vercel          # preview
