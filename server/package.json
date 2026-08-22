@@ -1,13 +1,34 @@
 {
-  "name": "presight-server",
+  "name": "app-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "author": "Maxim Abuzarov",
   "license": "MIT",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "migrate": "tsx src/index.ts migrate",
+    "seed": "tsx src/index.ts seed"
+  },
   "dependencies": {
-    "express": "~5.1.0"
+    "cors": "~2.8.5",
+    "express": "~5.1.0",
+    "zod": "~3.24.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "~9.6.0",
+    "@types/cors": "~2.8.17",
     "@types/express": "~5.0.1",
-    "@types/node-fetch": "~2.6.12"
+    "@types/node": "~24.13.3",
+    "tsx": "~4.19.3",
+    "typescript": "~5.8.3"
+  },
+  "engines": {
+    "node": ">=22.5.0"
   }
 }

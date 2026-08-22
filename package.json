@@ -1,17 +1,28 @@
 {
-  "name": "presight-execise",
+  "name": "app",
   "version": "1.0.0",
+  "private": true,
   "repository": "",
-  "author": "",
+  "author": "Maxim Abuzarov",
   "license": "MIT",
   "workspaces": [
     "client",
     "server"
   ],
   "scripts": {
-    "start": "lerna run start"
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm -w app-server run dev",
+    "dev:client": "npm -w app-client run dev",
+    "build": "npm -w app-client run build && npm -w app-server run build",
+    "seed": "npm -w app-server run seed",
+    "test": "npm -w app-server run test",
+    "typecheck": "npm -w app-server run typecheck",
+    "start": "npm -w app-server run start"
   },
   "devDependencies": {
-    "lerna": "~8.2.1"
+    "concurrently": "~9.1.2"
+  },
+  "engines": {
+    "node": ">=22.5.0"
   }
 }
