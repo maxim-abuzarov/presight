@@ -1,0 +1,212 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="Architecture" id="presight-architecture">
+    <mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="1060" background="#FAF9F6" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="People Directory" style="text;html=1;align=left;verticalAlign=middle;fontSize=26;fontStyle=1;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="48" y="34" width="500" height="34" as="geometry" />
+        </mxCell>
+
+        <mxCell id="subtitle" value="React · Express 5 · SQLite — how one query string becomes a page of records and the counts beside it" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#6B6862;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="48" y="66" width="700" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="rule" value="" style="line;strokeWidth=1;html=1;strokeColor=#DFDAD1;" vertex="1" parent="1">
+          <mxGeometry x="48" y="94" width="904" height="8" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zone-browser" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#F2F0EA;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="48" y="132" width="904" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="badge-1" value="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1A1917;strokeColor=none;fontColor=#FFFFFF;fontSize=11;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="68" y="148" width="22" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr-browser" value="BROWSER — REACT CLIENT" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#8A857B;letterSpacing=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="98" y="148" width="300" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="url" value="&lt;b&gt;URL query string&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;?q &amp;amp; nationalities &amp;amp; hobbies&lt;br/&gt;&amp;amp; sort &amp;amp; order&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="72" y="184" width="240" height="66" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ufs" value="&lt;b&gt;useFilterState&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;the only view state&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="352" y="184" width="180" height="66" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hooks" value="&lt;b&gt;useUsers&lt;/b&gt; · &lt;b&gt;useFacets&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;one query key — list and sidebar refresh together&lt;/font&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="572" y="184" width="356" height="66" as="geometry" />
+        </mxCell>
+
+        <mxCell id="list" value="&lt;b&gt;UserList&lt;/b&gt;&amp;nbsp; &lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;virtualized — 18 rows in the DOM of 10,000&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="72" y="272" width="400" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sidebar" value="&lt;b&gt;FilterSidebar&lt;/b&gt;&amp;nbsp; &lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;top 20 hobbies + nationalities, with counts&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="512" y="272" width="416" height="52" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zone-api" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#F2F0EA;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="48" y="408" width="904" height="322" as="geometry" />
+        </mxCell>
+        <mxCell id="badge-2" value="2" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1A1917;strokeColor=none;fontColor=#FFFFFF;fontSize=11;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="68" y="424" width="22" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr-api" value="NODE — EXPRESS 5" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#8A857B;letterSpacing=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="98" y="424" width="300" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ep-users" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:11px;&quot;&gt;&lt;b&gt;GET /api/users&lt;/b&gt;&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;a page of records + pagination&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;spacing=4;" vertex="1" parent="1">
+          <mxGeometry x="72" y="460" width="270" height="54" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ep-facets" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:11px;&quot;&gt;&lt;b&gt;GET /api/facets&lt;/b&gt;&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;top 20 { value, count }&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;spacing=4;" vertex="1" parent="1">
+          <mxGeometry x="372" y="460" width="270" height="54" as="geometry" />
+        </mxCell>
+
+        <mxCell id="controller" value="&lt;b&gt;users.controller&lt;/b&gt;&amp;nbsp; &lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;zod parses the query string, or 400&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="72" y="540" width="570" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="service" value="&lt;b&gt;users.service&lt;/b&gt;&amp;nbsp; &lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;offset maths, hasMore, response shape&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="72" y="608" width="570" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="repo" value="&lt;b&gt;users.repository&lt;/b&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; style=&quot;font-size:11px;&quot;&gt;SQL + row mapping&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=12;fontColor=#1A1917;fontFamily=Helvetica;spacing=4;" vertex="1" parent="1">
+          <mxGeometry x="72" y="676" width="270" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="filters" value="&lt;b&gt;users.filters&lt;/b&gt;&lt;br/&gt;&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;buildFilterSql()&lt;/font&gt;" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#E7F0EA;strokeColor=#1E5138;strokeWidth=2;shadow=1;fontSize=12;fontColor=#14452F;fontFamily=Helvetica;spacing=4;" vertex="1" parent="1">
+          <mxGeometry x="372" y="676" width="270" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="note" value="" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C9D9CE;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="672" y="460" width="256" height="262" as="geometry" />
+        </mxCell>
+        <mxCell id="note-title" value="ONE FILTER, FOUR QUERIES" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#1E5138;letterSpacing=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="692" y="476" width="220" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="note-cte" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;WITH matched AS ( … )&lt;/font&gt;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#E7F0EA;strokeColor=none;fontSize=10;fontColor=#14452F;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="692" y="502" width="216" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="q1" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;countUsers&lt;/font&gt;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FAF9F6;strokeColor=#DFDAD1;fontSize=10;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="716" y="558" width="192" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="q2" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;listUsers&lt;/font&gt;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FAF9F6;strokeColor=#DFDAD1;fontSize=10;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="716" y="590" width="192" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="q3" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;topHobbies&lt;/font&gt;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FAF9F6;strokeColor=#DFDAD1;fontSize=10;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="716" y="622" width="192" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="q4" value="&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot;&gt;topNationalities&lt;/font&gt;" style="rounded=1;arcSize=20;whiteSpace=wrap;html=1;fillColor=#FAF9F6;strokeColor=#DFDAD1;fontSize=10;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="716" y="654" width="192" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="note-foot" value="all four prefix it, so a count can never&lt;br/&gt;disagree with the list it produces" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#6B6862;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="692" y="686" width="220" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="fan1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9CBFAB;endArrow=none;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-cte" target="q1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fan2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9CBFAB;endArrow=none;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-cte" target="q2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fan3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9CBFAB;endArrow=none;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-cte" target="q3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fan4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9CBFAB;endArrow=none;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-cte" target="q4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="zone-db" value="" style="rounded=1;arcSize=4;whiteSpace=wrap;html=1;fillColor=#F2F0EA;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="48" y="794" width="904" height="204" as="geometry" />
+        </mxCell>
+        <mxCell id="badge-3" value="3" style="ellipse;whiteSpace=wrap;html=1;fillColor=#1A1917;strokeColor=none;fontColor=#FFFFFF;fontSize=11;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="68" y="810" width="22" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr-db" value="SQLITE — PRESIGHT.DB, VIA NODE:SQLITE" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#8A857B;letterSpacing=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="98" y="810" width="400" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t-nat" value="&lt;b&gt;nationalities&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot; color=&quot;#6B6862&quot;&gt;id · name&lt;/font&gt;&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#8A857B&quot; style=&quot;font-size:10px;&quot;&gt;45 rows&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=11;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="72" y="846" width="180" height="124" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t-users" value="&lt;b&gt;users&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot; color=&quot;#6B6862&quot;&gt;id · avatar · age&lt;br/&gt;first_name · last_name&lt;br/&gt;*_lc · nationality_id&lt;/font&gt;&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#8A857B&quot; style=&quot;font-size:10px;&quot;&gt;10,000 rows&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=11;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="302" y="846" width="200" height="124" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t-uh" value="&lt;b&gt;user_hobbies&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot; color=&quot;#6B6862&quot;&gt;user_id + hobby_id&lt;/font&gt;&lt;br/&gt;&lt;font color=&quot;#6B6862&quot; style=&quot;font-size:10px;&quot;&gt;&lt;i&gt;0–10 per user&lt;/i&gt;&lt;/font&gt;&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#8A857B&quot; style=&quot;font-size:10px;&quot;&gt;43,448 rows&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=11;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="552" y="846" width="190" height="124" as="geometry" />
+        </mxCell>
+
+        <mxCell id="t-hob" value="&lt;b&gt;hobbies&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;&lt;font face=&quot;Menlo&quot; style=&quot;font-size:10px;&quot; color=&quot;#6B6862&quot;&gt;id · name&lt;/font&gt;&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#8A857B&quot; style=&quot;font-size:10px;&quot;&gt;47 rows&lt;/font&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#DFDAD1;shadow=1;fontSize=11;fontColor=#1A1917;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="792" y="846" width="160" height="124" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-url-ufs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="url" target="ufs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-ufs-hooks" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ufs" target="hooks">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-hooks-list" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=0.08;exitY=1;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="hooks" target="list">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-hooks-sidebar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=0.6;exitY=1;exitDx=0;exitDy=0;entryX=0.55;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="hooks" target="sidebar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-http-users" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1E5138;strokeWidth=2;fontSize=10;fontColor=#1E5138;fontStyle=1;endArrow=blockThin;endFill=1;labelBackgroundColor=#FAF9F6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="list" target="ep-users">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-http-facets" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1E5138;strokeWidth=2;fontSize=10;fontColor=#1E5138;fontStyle=1;endArrow=blockThin;endFill=1;labelBackgroundColor=#FAF9F6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="sidebar" target="ep-facets">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-users-ctrl" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ep-users" target="controller">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-facets-ctrl" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ep-facets" target="controller">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-ctrl-svc" value="validated input" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;fontSize=10;fontColor=#8A857B;endArrow=blockThin;endFill=1;labelBackgroundColor=#F2F0EA;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="controller" target="service">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-svc-repo" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;endArrow=blockThin;endFill=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="service" target="repo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-repo-filters" value="the WHERE" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1E5138;strokeWidth=2;fontSize=10;fontColor=#1E5138;fontStyle=1;endArrow=blockThin;endFill=1;labelBackgroundColor=#F2F0EA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="filters">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-repo-db" value="4 statements" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;fontSize=10;fontColor=#8A857B;endArrow=blockThin;endFill=1;labelBackgroundColor=#FAF9F6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="t-users">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-users-nat" value="N : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;fontSize=10;fontColor=#8A857B;endArrow=blockThin;endFill=1;labelBackgroundColor=#F2F0EA;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="t-users" target="t-nat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-uh-users" value="N : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;fontSize=10;fontColor=#8A857B;endArrow=blockThin;endFill=1;labelBackgroundColor=#F2F0EA;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="t-uh" target="t-users">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-uh-hob" value="N : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B4AEA3;strokeWidth=1.5;fontSize=10;fontColor=#8A857B;endArrow=blockThin;endFill=1;labelBackgroundColor=#F2F0EA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="t-uh" target="t-hob">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

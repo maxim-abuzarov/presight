@@ -1,119 +1,202 @@
-# Presight Frontend Exercise
+# People Directory
 
-Build a small full-stack user directory application. The goal is to evaluate how you design a searchable, filterable, paginated UI backed by persisted data and clear API boundaries.
+A searchable, filterable directory of 10,000 people. Type a name, narrow by nationality and hobbies, and the sidebar always shows the top 20 of each **for the result set you are currently looking at** — with counts that match what selecting them returns.
 
-The application should include:
+Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md).
 
-- A React client.
-- A Node.js API server.
-- A SQLite database used as the source of truth for user data.
-- Docker configuration for running the application locally.
+- **React 19** client — URL-synced state, virtualized infinite list, light and dark themes
+- **Express 5** API — paginated, filtered, sorted, with live facet counts
+- **SQLite** as the source of truth, through Node's built-in `node:sqlite` (no native modules)
 
-## Scenario
+---
 
-Users need to browse a large directory of people, search by name, and narrow results by nationality and hobbies. The filter sidebar should help users discover useful filters based on the result set they are currently viewing.
+## Architecture
+
+![Architecture](docs/architecture.png)
+
+The design turns on one decision. `buildFilterSql()` is the only place that knows what "in scope" means; it returns a single `WITH matched AS (…)` CTE, and **four queries prefix it** — the total, the page, the hobby counts and the nationality counts. Because they are all built from the same filter, a facet count can never disagree with the list it produces.
+
+Dependencies point one way — `schema → service → repository → connection` — and nothing below the HTTP boundary imports Express or zod, which is why the service can be tested by calling a function instead of standing up a server.
+
+---
 
 ## Requirements
 
-### Data Model
+- **Node 22.5 or newer.** The API uses the built-in `node:sqlite` module, which does not exist in earlier versions. `.nvmrc` pins 24.15.0, so `nvm use` picks the right one.
+- npm 10+
 
-Seed a SQLite database with enough records to make pagination, infinite scroll, search, and filter counts meaningful.
+If you start the server on an older Node it exits with an explanation rather than a stack trace.
 
-Each user should have:
+## Setup
 
-- `avatar`
-- `first_name`
-- `last_name`
-- `age`
-- `nationality`
-- `hobbies`, from 0 to 10 hobbies per user
-
-Choose a data model that supports the required behavior.
-
-SQLite must be the persisted source of user data.
-
-### API
-
-Expose an API that supports:
-
-- Paginated user results.
-- Text filtering from user input across `first_name` and `last_name`.
-- Filtering by one or more nationalities.
-- Filtering by one or more hobbies.
-- Sorting by `first_name`, `last_name`, `age`, and `nationality`.
-- Pagination metadata so the client can determine whether more results are available.
-- Top 20 hobbies for the active text filter and filter state, including `{ value, count }`.
-- Top 20 nationalities for the active text filter and filter state, including `{ value, count }`.
-
-The top 20 values and counts must reflect the currently applied text filter and selected filters, not the global dataset.
-
-Filter semantics:
-
-- Multiple selected hobbies should match users who have all selected hobbies.
-- Multiple selected nationalities should match users from any selected nationality.
-- Text, hobby, and nationality filters should apply together.
-
-Sorting semantics:
-
-- Sorted results must be deterministic. Use `id` as a final tie-breaker when values are equal.
-- Pagination must respect the active sort without duplicate or missing users.
-
-### Client
-
-Build a React interface that includes:
-
-- A text filter input for `first_name` and `last_name`.
-- A virtualized, infinitely scrolling list of user cards.
-- A sidebar containing the top 20 hobbies and top 20 nationalities for the current result set, including counts.
-- Controls for applying and removing hobby and nationality filters.
-- Controls for choosing sort field and sort direction.
-- Loading, empty, and error states.
-- A responsive layout that remains usable on desktop and mobile.
-
-User cards should follow this structure:
-
-```text
-|----------------------------------|
-| avatar      first_name+last_name |
-|             nationality      age |
-|                                  |
-|             (2 hobbies) (+n)     |
-|----------------------------------|
+```bash
+nvm use          # or make sure `node -v` is >= 22.5
+npm install
+npm run seed     # creates server/data/presight.db — ~10,000 users in about 200ms
+npm run dev
 ```
 
-Show up to 2 hobbies on the card. If the user has more hobbies, display the remaining count as `+n`.
+| | |
+|---|---|
+| Client | http://localhost:5555 |
+| API | http://localhost:7777 |
 
-Use a virtual scroll implementation for the list.
+`npm run dev` runs both processes together. Vite proxies `/api` to the server, so the client always calls same-origin paths.
 
-When the text filter or selected filters change, the client must refresh both:
+Run them separately with `npm run dev:server` and `npm run dev:client`.
 
-- The paginated user list.
-- The top 20 hobbies and nationalities in the sidebar.
+## Database
 
-The text filter value, selected hobbies, selected nationalities, sort field, and sort direction must be reflected in the URL query string. Reloading or sharing the URL should restore the same view state.
+SQLite, at `server/data/presight.db` (gitignored — recreate it with `npm run seed`).
 
-## Implementation Notes
+```bash
+npm run seed                       # wipe and re-seed, deterministic
+SEED_USER_COUNT=500 npm run seed   # a smaller set
+rm -rf server/data && npm run seed # rebuild from nothing
+sqlite3 server/data/presight.db    # inspect it
+```
 
-- Keep the database setup easy to run locally.
-- Include seed logic or a documented command that creates the SQLite database.
-- Include a `Dockerfile` and `docker-compose.yml` that can run the application locally.
+The seed is deterministic — every Faker instance is explicitly seeded, so re-running produces byte-identical data and a failing test always reproduces.
 
-## Evaluation Focus
+Four tables. Hobbies are a join table rather than a JSON column, because the brief needs *"has all of these hobbies"* matching and per-hobby counts over a filtered set — both a few lines of SQL against a join table, and slow, awkward string work against a blob.
 
-We will pay particular attention to:
+| Table | Rows | |
+|---|---|---|
+| `users` | 10,000 | `avatar`, `first_name`, `last_name`, `age`, `nationality_id`, plus lowercased name columns |
+| `nationalities` | 45 | |
+| `hobbies` | 47 | |
+| `user_hobbies` | ~43,000 | 0–10 per user |
 
-- Correct data persistence and API behavior.
-- Correct filtering, sorting, pagination, and top 20 counts.
-- Smooth infinite scrolling with virtualization.
-- URL-synced state.
-- Clear loading, empty, and error states.
-- Easy local and Docker-based setup.
+The lowercased `*_lc` columns exist because SQLite's `LIKE` only case-folds ASCII, and the directory is international — without them, searching for `MARTÍN` would miss *Martín*.
 
-## Deliverables
+## Production build
 
-Please provide:
+```bash
+npm run build
+npm start        # http://localhost:7777 — Express serves the API and the built client
+```
 
-- Source code for the React client and Node.js server.
-- A `Dockerfile` and `docker-compose.yml`.
-- Instructions for setup, database seeding, and running locally.
-- Instructions for running with Docker Compose.
+One origin, one process. Deep links work: any non-API GET falls through to the client shell, while unknown `/api/*` paths stay JSON 404s.
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+That is the whole setup — no Node install, no seeding step. Open http://localhost:7777.
+
+The container seeds itself on first boot and skips it afterwards, so the database survives restarts:
+
+```
+Seeded 10000 users and 43448 hobby links into /data/presight.db in 154ms.
+API listening on http://localhost:7777
+```
+
+```bash
+docker compose down          # stop; the volume keeps the data
+docker compose down -v       # stop and delete the database
+docker compose up -d         # background
+docker compose logs -f app   # follow
+```
+
+| | |
+|---|---|
+| Image | 219MB, `node:24-alpine`, four-stage build |
+| Runs as | the non-root `node` user |
+| Data | named volume `directory-data`, mounted at `/data` |
+| Health | `/api/health`, checked every 30s |
+
+The image ships only production dependencies and compiled output — no `tsx`, no `typescript`, no source. Because SQLite comes from Node's built-in `node:sqlite`, there is no native module to compile and the image needs no build toolchain.
+
+Set `SEED_ON_START=always` to force a re-seed on every boot, or override `SEED_USER_COUNT` for a smaller dataset.
+
+---
+
+## API
+
+### `GET /api/users`
+
+| Param | Notes |
+|---|---|
+| `q` | Matched across `first_name` and `last_name`. Every whitespace-separated word must hit one of the two fields, so a full name works and word order does not matter. |
+| `nationalities` | **OR** — a user from any selected country matches |
+| `hobbies` | **AND** — a user must have every selected hobby |
+| `sort` | `first_name` · `last_name` · `age` · `nationality` |
+| `order` | `asc` · `desc` |
+| `page`, `pageSize` | `pageSize` max 100, default 50 |
+
+List params accept both `?hobbies=a,b` and `?hobbies=a&hobbies=b`.
+
+```json
+{
+  "data": [{ "id": 1, "avatar": "…", "first_name": "…", "last_name": "…",
+             "age": 34, "nationality": "France", "hobbies": ["Chess", "Reading"] }],
+  "pagination": { "page": 1, "pageSize": 50, "total": 417,
+                  "totalPages": 9, "hasMore": true }
+}
+```
+
+### `GET /api/facets`
+
+Takes `q`, `nationalities` and `hobbies`. Returns the top 20 of each as `{ value, count }`.
+
+It is a separate endpoint on purpose: infinite scroll requests page 2, 3, 4… continuously, and the sidebar must not recompute on every one. Facets refetch only when the text or filters change.
+
+Each facet is scoped by the semantics of its own dimension. **Hobbies** are AND, so every selected hobby narrows the set and the remaining hobbies — counted inside it — are exactly *"what can I narrow by next"*. **Nationalities** are OR, so that facet ignores its own selection; scoping it by itself would leave only the countries already chosen, and "filter by one or more nationalities" would become unreachable from the interface. Its counts still honour the text and hobby filters, and they sum to the total across a multi-country selection.
+
+### `GET /api/health`
+
+`{ "ok": true }`.
+
+---
+
+## Client
+
+Everything that defines the view lives in the URL — text, selected nationalities, selected hobbies, sort field and direction. Reload or share the link and you get the identical view back; the browser's back button walks the filter history. Nothing else stores view state.
+
+- **Virtualized list** — scrolling all 10,000 records keeps roughly 18 cards in the DOM.
+- **Infinite scroll** — the next page loads as the sentinel row approaches.
+- **Loading, empty and error states**, with a retry and a clear-filters path out.
+- **Responsive** — the filter rail becomes a drawer below 1024px.
+- **Dark by default**, switchable and remembered. Every foreground/background pair is at or above WCAG AA (4.5:1) in both themes.
+- **`/`** focuses the search field.
+
+Two easter eggs: search `presight`, or `peter parker`.
+
+## Tests
+
+```bash
+npm test         # 43 tests, ~450ms
+npm run typecheck
+```
+
+Node's built-in test runner against an in-memory database — no test framework, no extra dependencies. They target the properties the brief is graded on rather than line coverage: facet counts matching the totals they produce, a full page-walk asserting no duplicates or gaps, AND/OR filter semantics, deterministic ordering across all four sort fields with the `id` tie-break, Unicode search, and SQL injection through `sort`.
+
+## Layout
+
+```
+client/src
+├── api/            typed fetch layer + shared response types
+├── hooks/          useFilterState (URL ⇄ state), useDirectory, useTheme
+└── components/     UserList, UserCard, FilterSidebar, SearchField, …
+
+server/src
+├── index.ts        guarded entry point: serve · seed · migrate
+├── db/             connection, schema, seed, vocabularies
+└── users/          routes → controller → service → repository → filters
+```
+
+## Configuration
+
+Every setting has a working default, so there is no `.env` to create.
+
+| Variable | Default |
+|---|---|
+| `PORT` | `7777` |
+| `DB_PATH` | `server/data/presight.db` |
+| `CLIENT_DIST` | `client/dist` |
+| `SEED_USER_COUNT` | `10000` |
+| `NODE_ENV` | unset (development) |
+
+Node 22+ reads an env file natively if you want one: `node --env-file=.env dist/index.js`.

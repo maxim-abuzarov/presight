@@ -16,7 +16,7 @@
     "build": "npm -w app-client run build && npm -w app-server run build",
     "seed": "npm -w app-server run seed",
     "test": "npm -w app-server run test",
-    "typecheck": "npm -w app-server run typecheck",
+    "typecheck": "npm -w app-server run typecheck && npm -w app-client run typecheck",
     "start": "npm -w app-server run start"
   },
   "devDependencies": {

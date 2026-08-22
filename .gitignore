@@ -16,6 +16,9 @@ scripts/
 # generated sqlite database (recreate with `npm run seed`)
 server/data/
 
+# build caches
+*.tsbuildinfo
+
 # misc
 .DS_Store
 .env
@@ -32,3 +35,6 @@ yarn-error.log*
 
 .parcel-cache
 .idea/
+
+# design-review screenshots (process output, not a deliverable)
+.impeccable/

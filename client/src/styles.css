@@ -1,0 +1,270 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ground: #f1f0ec;
+  --color-surface: #ffffff;
+  --color-sunk: #e8e6e1;
+  --color-ink: #1a1917;
+  --color-muted: #524f49;
+  --color-faint: #68655e;
+  --color-line: #ddd9d1;
+  --color-line-strong: #c6c1b6;
+  --color-accent: #1e5138;
+  --color-accent-ink: #ffffff;
+  --color-accent-weak: #e2ebe4;
+  --color-danger: #8f2f21;
+
+  --font-sans: 'Libre Franklin', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius-card: 3px;
+
+  --spacing-content: 54rem;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-ground: #0e1211;
+  --color-surface: #171b1a;
+  --color-sunk: #1f2523;
+  --color-ink: #edefec;
+  --color-muted: #a9b0ab;
+  --color-faint: #8b938d;
+  --color-line: #262c2a;
+  --color-line-strong: #39413e;
+  --color-accent: #5fd4a0;
+  --color-accent-ink: #06120d;
+  --color-accent-weak: #16241d;
+  --color-danger: #ef9382;
+}
+
+@layer base {
+  html {
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-accent-weak);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  input {
+    caret-color: var(--color-accent);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border: 3px solid var(--color-ground);
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted);
+  }
+}
+
+@layer components {
+  .rail {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-surface) 96%, var(--color-accent)) 0%,
+      var(--color-surface) 34%
+    );
+  }
+
+  .list-scrim {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 28px;
+    z-index: 10;
+    pointer-events: none;
+    background: linear-gradient(180deg, var(--color-ground) 0%, transparent 100%);
+  }
+
+  .card {
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--color-ink) 6%, transparent),
+      0 1px 2px -1px rgb(0 0 0 / 0.28);
+    transition:
+      transform 200ms var(--ease-out-quint),
+      box-shadow 200ms var(--ease-out-quint),
+      border-color 200ms var(--ease-out-quint);
+  }
+
+  .card:hover {
+    z-index: 1;
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--color-accent) 34%, var(--color-line));
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--color-ink) 10%, transparent),
+      0 14px 28px -18px rgb(0 0 0 / 0.7);
+  }
+}
+
+@layer utilities {
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+}
+
+@keyframes record-in {
+  from {
+    opacity: 0.001;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.record-in {
+  animation: record-in 380ms var(--ease-out-expo) both;
+}
+
+.record-row {
+  animation: record-in 300ms var(--ease-out-quint) both;
+  animation-delay: calc(var(--row, 0) * 22ms);
+}
+
+@keyframes presight-in {
+  from {
+    opacity: 0.001;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mark-in {
+  from {
+    opacity: 0.001;
+    transform: translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes glow-breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.presight-sweep {
+  transform-origin: left center;
+  animation: sweep 640ms var(--ease-out-expo) both;
+  animation-delay: 420ms;
+}
+
+.presight-mark {
+  animation: mark-in 620ms var(--ease-out-expo) both;
+}
+
+.presight-glow {
+  animation: glow-breathe 6s var(--ease-in-out-cubic) infinite alternate;
+}
+
+.presight-card {
+  animation: presight-in 320ms var(--ease-out-quint) both;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-sunk) 0%,
+    color-mix(in oklab, var(--color-sunk) 55%, var(--color-surface)) 50%,
+    var(--color-sunk) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record-in,
+  .record-row,
+  .skeleton,
+  .egg-mark,
+  .egg-glow,
+  .egg-sweep,
+  .presight-card {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+  }
+}

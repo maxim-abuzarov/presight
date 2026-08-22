@@ -1,7 +1,7 @@
 import { Faker, base, de, en, es, fr, ja, pt_BR } from '@faker-js/faker';
 
 import { config } from '../config.js';
-import { closeDb, getDb } from './connection.js';
+import { closeDb, getDb, queryOne } from './connection.js';
 import { HOBBIES, NATIONALITIES, type WeightedValue } from './datasets.js';
 import { migrate } from './migrate.js';
 
@@ -149,4 +149,15 @@ export function runSeed(): void {
     `Seeded ${users} users and ${links} hobby links into ${config.dbPath} in ${Date.now() - started}ms.`,
   );
   closeDb();
+}
+
+export function runSeedIfEmpty(): void {
+  migrate();
+  const { count } = queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM users');
+  if (count > 0) {
+    console.log(`Database already holds ${count} users; skipping seed.`);
+    closeDb();
+    return;
+  }
+  runSeed();
 }

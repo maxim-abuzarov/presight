@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+server/data
+.git
+.gitignore
+.impeccable
+.claude
+docs
+*.md
+!REQUIREMENTS.md
+.nvmrc
+.prettierrc.json
+Dockerfile
+.dockerignore
+docker-compose.yml

@@ -16,12 +16,12 @@
     "seed": "tsx src/index.ts seed"
   },
   "dependencies": {
+    "@faker-js/faker": "~9.6.0",
     "cors": "~2.8.5",
     "express": "~5.1.0",
     "zod": "~3.24.2"
   },
   "devDependencies": {
-    "@faker-js/faker": "~9.6.0",
     "@types/cors": "~2.8.17",
     "@types/express": "~5.0.1",
     "@types/node": "~24.13.3",
