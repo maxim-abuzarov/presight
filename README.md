@@ -46,6 +46,11 @@ If you start the server on an older Node it exits with an explanation rather tha
 - **Express 5** API — paginated, filtered, sorted, with live facet counts
 - **SQLite** as the source of truth, through Node's built-in `node:sqlite` (no native modules)
 
+## App overview
+<img width="1440" height="689" alt="image" src="https://github.com/user-attachments/assets/2631472b-727b-4ebe-9162-ffbd013683ad" />
+<img width="1440" height="690" alt="image" src="https://github.com/user-attachments/assets/66aa6e25-78a3-4db8-bf51-9bfe77c8819c" />
+<img width="1436" height="686" alt="image" src="https://github.com/user-attachments/assets/d55f008b-a467-4eac-b58d-e85bcf25fb6b" />
+
 ## Architecture
 
 ![Architecture](docs/architecture.png)
