@@ -12,10 +12,12 @@ export function UserCard({ user }: { user: User }) {
       <Avatar src={user.avatar} firstName={user.first_name} lastName={user.last_name} />
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="truncate text-base font-semibold tracking-tight text-ink">
-            {user.first_name} {user.last_name}
-          </h3>
+        <h3 className="truncate text-base font-semibold tracking-tight text-ink">
+          {user.first_name} {user.last_name}
+        </h3>
+
+        <div className="mt-0.5 flex items-baseline justify-between gap-3">
+          <p className="truncate text-sm text-muted">{user.nationality}</p>
           <span
             className="nums shrink-0 text-sm font-medium text-muted"
             title={`${user.age} years old`}
@@ -23,8 +25,6 @@ export function UserCard({ user }: { user: User }) {
             {user.age}
           </span>
         </div>
-
-        <p className="mt-0.5 truncate text-sm text-muted">{user.nationality}</p>
 
         <div className="mt-3 flex min-h-6 flex-wrap items-center gap-1.5">
           {shown.map((hobby) => (

@@ -21,7 +21,9 @@ export function useTheme() {
     document.documentElement.dataset.theme = next;
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch {}
+    } catch {
+      // Storage can be unavailable (private mode, blocked cookies); the theme still applies.
+    }
   }, []);
 
   return { theme, setTheme: change };

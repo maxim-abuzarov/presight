@@ -97,6 +97,30 @@ describe('filter semantics', () => {
     assert.equal(either.pagination.total, france + japan, 'OR must be the union');
   });
 
+  it('matches users within an inclusive age range', () => {
+    const { data } = getUsers(list({ ageMin: 30, ageMax: 40, pageSize: 100 }));
+    assert.ok(data.length > 0, 'expected the fixture to contain matches');
+    for (const user of data) {
+      assert.ok(user.age >= 30 && user.age <= 40, `${user.age} should fall within 30-40`);
+    }
+  });
+
+  it('treats an open-ended age bound as one-sided', () => {
+    const atLeast = getUsers(list({ ageMin: 60, pageSize: 100 }));
+    for (const user of atLeast.data) assert.ok(user.age >= 60);
+
+    const atMost = getUsers(list({ ageMax: 25, pageSize: 100 }));
+    for (const user of atMost.data) assert.ok(user.age <= 25);
+  });
+
+  it('combines with other filters, narrowing rather than replacing them', () => {
+    const withoutAge = getUsers(list({ nationalities: ['France'], pageSize: 1 })).pagination.total;
+    const withAge = getUsers(
+      list({ nationalities: ['France'], ageMin: 30, ageMax: 40, pageSize: 1 }),
+    ).pagination.total;
+    assert.ok(withAge <= withoutAge, 'an age range must narrow, not widen, the result');
+  });
+
   it('applies text, nationality and hobby filters together', () => {
     const { data } = getUsers(
       list({ q: 'a', nationalities: ['France'], hobbies: ['Reading'], pageSize: 100 }),
@@ -258,6 +282,16 @@ describe('facets', () => {
     assert.ok(!sameHobby || sameHobby.count < global.count, 'a filter must not widen a count');
   });
 
+  it('narrows both facets when an age range is applied, unlike nationality self-exclusion', () => {
+    const global = getFacets(filters()).nationalities[0]!;
+    const scoped = getFacets(filters({ ageMin: 30, ageMax: 40 })).nationalities;
+    const sameNationality = scoped.find((facet) => facet.value === global.value);
+    assert.ok(
+      !sameNationality || sameNationality.count <= global.count,
+      'an age range must not widen a count',
+    );
+  });
+
   it('returns empty facets for an unmatched filter', () => {
     const { hobbies, nationalities } = getFacets(filters({ q: 'zzzzzzzz' }));
     assert.deepEqual(hobbies, []);
@@ -283,7 +317,7 @@ describe('seed', () => {
   it('populates every field the brief requires', () => {
     const [user] = getUsers(list({ pageSize: 1 })).data;
     assert.ok(user);
-    assert.ok(user.avatar.startsWith('https://'));
+    assert.match(user.avatar, /^\/api\/avatars\/u\d+\.svg$/, 'avatars are served by this app');
     assert.ok(user.first_name.length > 0);
     assert.ok(user.last_name.length > 0);
     assert.ok(user.age >= 18 && user.age <= 72);

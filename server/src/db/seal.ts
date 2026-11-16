@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 import { config } from '../config.js';
+import { logger } from '../shared/logger.js';
 import { closeDb, getDb } from './connection.js';
 
 export function runSeal(): void {
@@ -15,5 +16,5 @@ export function runSeal(): void {
   }
 
   const bytes = fs.statSync(config.dbPath).size;
-  console.log(`Sealed ${config.dbPath} for read-only use (${(bytes / 1e6).toFixed(1)}MB).`);
+  logger.info({ dbPath: config.dbPath, bytes }, 'Sealed database for read-only use');
 }

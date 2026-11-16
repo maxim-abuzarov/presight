@@ -8,6 +8,8 @@ export interface UserFilters {
   q?: string | undefined;
   nationalities: string[];
   hobbies: string[];
+  ageMin?: number | undefined;
+  ageMax?: number | undefined;
 }
 
 export interface ListUsersInput extends UserFilters {

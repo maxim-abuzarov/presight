@@ -8,13 +8,21 @@ interface UserListProps {
   users: User[];
   hasMore: boolean;
   isFetchingMore: boolean;
+  /** Set when the last next-page request failed; automatic loading pauses until retried. */
+  loadMoreError: string | null;
   onLoadMore: () => void;
 }
 
 const ROW_HEIGHT = 122;
 const GAP = 8;
 
-export function UserList({ users, hasMore, isFetchingMore, onLoadMore }: UserListProps) {
+export function UserList({
+  users,
+  hasMore,
+  isFetchingMore,
+  loadMoreError,
+  onLoadMore,
+}: UserListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const rowCount = hasMore ? users.length + 1 : users.length;
 
@@ -30,9 +38,10 @@ export function UserList({ users, hasMore, isFetchingMore, onLoadMore }: UserLis
   const lastRow = virtualRows[virtualRows.length - 1];
 
   useEffect(() => {
-    if (!lastRow || !hasMore || isFetchingMore) return;
+    // After a failure, stop auto-loading: retrying in a loop would hammer a failing server.
+    if (!lastRow || !hasMore || isFetchingMore || loadMoreError) return;
     if (lastRow.index >= users.length - 1) onLoadMore();
-  }, [lastRow, hasMore, isFetchingMore, users.length, onLoadMore]);
+  }, [lastRow, hasMore, isFetchingMore, loadMoreError, users.length, onLoadMore]);
 
   return (
     <div
@@ -61,6 +70,20 @@ export function UserList({ users, hasMore, isFetchingMore, onLoadMore }: UserLis
                   style={{ '--row': Math.min(row.index, 9) } as React.CSSProperties}
                 >
                   <UserCard user={user} />
+                </div>
+              ) : loadMoreError ? (
+                <div
+                  role="alert"
+                  className="flex flex-wrap items-center justify-center gap-3 py-6 text-sm text-muted"
+                >
+                  <span>Could not load more records. {loadMoreError}</span>
+                  <button
+                    type="button"
+                    onClick={onLoadMore}
+                    className="rounded-card border border-line-strong bg-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors duration-150 hover:bg-sunk"
+                  >
+                    Try again
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2.5 py-6 text-sm text-muted">

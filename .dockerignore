@@ -5,7 +5,6 @@ server/data
 .git
 .gitignore
 .impeccable
-.claude
 docs
 *.md
 !REQUIREMENTS.md
@@ -14,3 +13,9 @@ docs
 Dockerfile
 .dockerignore
 docker-compose.yml
+e2e
+playwright-report
+test-results
+**/coverage
+.github
+.env*

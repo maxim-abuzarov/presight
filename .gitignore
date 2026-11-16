@@ -41,3 +41,10 @@ yarn-error.log*
 
 # vercel
 .vercel/
+
+# end-to-end test output
+/e2e/.data/
+/playwright-report/
+/test-results/
+/client/coverage/
+/server/coverage/

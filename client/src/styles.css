@@ -14,7 +14,9 @@
   --color-accent-weak: #e2ebe4;
   --color-danger: #8f2f21;
 
-  --font-sans: 'Libre Franklin', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans:
+    'Libre Franklin Variable', 'Libre Franklin', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', sans-serif;
 
   --radius-card: 3px;
 

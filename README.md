@@ -1,133 +1,139 @@
 # People Directory
 
-### → [presight-one.vercel.app](https://presight-one.vercel.app)
+A searchable, filterable directory of 10,000 people. Type a name, narrow by nationality, hobbies
+and age, and the sidebar always shows the top 20 of each **for the result set you are looking
+at**, with counts that match what selecting them returns.
 
-Live, with all 10,000 records. Nothing to install.
+Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md). Live at
+**[presight-one.vercel.app](https://presight-one.vercel.app)**.
 
-A searchable, filterable directory of 10,000 people. Type a name, narrow by nationality and hobbies, and the sidebar always shows the top 20 of each **for the result set you are currently looking at** — with counts that match what selecting them returns.
-
-Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md).
+- **React 19** client: URL-synced state, virtualized infinite list, validated forms, light/dark
+- **Express 5** API: layered routes → controller → service → repository, zod at the boundary
+- **SQLite** through Node's built-in `node:sqlite`: versioned migrations, constraints, indexes
+- **Production concerns**: structured JSON logs with request ids, readiness health check,
+  security headers, rate limiting, compression, graceful shutdown, hardened Docker image
+- **Quality gate**: CI runs format, lint, types, 169 unit/integration tests, 22 end-to-end tests,
+  a dependency audit and a container smoke test on every push
 
 ---
 
 ## Quick start
 
-Nothing to run — it is deployed at **[presight-one.vercel.app](https://presight-one.vercel.app)**.
-
-To run it yourself:
+### Docker (nothing else to install)
 
 ```bash
 docker compose up --build
 ```
 
-Open **http://localhost:7777**. That is the whole setup — no Node install, no seeding step. The container seeds itself on first boot and skips it afterwards.
+Open **http://localhost:7777**. The container migrates and seeds its database on first boot and
+reuses it afterwards. It is ready when `docker compose ps` shows `(healthy)`.
 
-Prefer to run it directly? You need **Node 22.5 or newer** (`.nvmrc` pins 24.15.0):
+### Node
+
+Needs **Node 22.5+** (`.nvmrc` pins 24.15.0) for the built-in `node:sqlite` module.
 
 ```bash
 nvm use
 npm install
-npm run seed     # creates server/data/presight.db
-npm run dev
+npm run seed     # creates server/data/presight.db (10,000 users, ~150ms)
+npm run dev      # API on :7777, then the client on :5555
 ```
 
-| | |
-|---|---|
-| Client | http://localhost:5555 |
-| API | http://localhost:7777 |
+Open **http://localhost:5555**. `npm run dev` starts the API first and starts Vite only once
+`/api/health` answers, so the first page load never races a server that is still booting. Vite
+proxies `/api` to the API, so the browser always talks to one origin.
 
-`npm run dev` runs both processes together; Vite proxies `/api` to the server, so the client always calls same-origin paths. Run them apart with `npm run dev:server` and `npm run dev:client`.
-
-If you start the server on an older Node it exits with an explanation rather than a stack trace — the API uses the built-in `node:sqlite` module, which does not exist before 22.5.
+On an older Node the server exits with an explanation instead of a stack trace.
 
 ---
 
-- **React 19** client — URL-synced state, virtualized infinite list, light and dark themes
-- **Express 5** API — paginated, filtered, sorted, with live facet counts
-- **SQLite** as the source of truth, through Node's built-in `node:sqlite` (no native modules)
+## Commands
 
-## App overview
-<img width="1440" height="689" alt="image" src="https://github.com/user-attachments/assets/2631472b-727b-4ebe-9162-ffbd013683ad" />
-<img width="1440" height="690" alt="image" src="https://github.com/user-attachments/assets/66aa6e25-78a3-4db8-bf51-9bfe77c8819c" />
-<img width="1436" height="686" alt="image" src="https://github.com/user-attachments/assets/d55f008b-a467-4eac-b58d-e85bcf25fb6b" />
+| Command                  | What it does                                                             |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `npm run dev`            | API (watch mode) + client (HMR)                                          |
+| `npm run seed`           | Drop, migrate and re-seed the database (deterministic)                   |
+| `npm run migrate`        | Apply pending migrations only                                            |
+| `npm run build`          | Build client (Vite) and server (tsc)                                     |
+| `npm start`              | Production server: API + built client on :7777                           |
+| `npm test`               | Server (node:test) and client (Vitest) unit + integration tests          |
+| `npm run test:coverage`  | Same, with coverage (server fails under 85% lines)                       |
+| `npm run test:e2e`       | Build, then Playwright against the production server (desktop + mobile)  |
+| `npm run lint`           | ESLint (TypeScript + React hooks rules)                                  |
+| `npm run typecheck`      | `tsc` for both workspaces                                                |
+| `npm run verify`         | format check + lint + typecheck + tests: what CI's first job runs        |
+| `npm run smoke -- <url>` | Check a running instance (local, Docker or live); exits 1 on any failure |
+
+---
 
 ## Architecture
 
 ![Architecture](docs/architecture.png)
 
-The design turns on one decision. `buildFilterSql()` is the only place that knows what "in scope" means; it returns a single `WITH matched AS (…)` CTE, and **four queries prefix it** — the total, the page, the hobby counts and the nationality counts. Because they are all built from the same filter, a facet count can never disagree with the list it produces.
+Source: [docs/architecture.drawio](docs/architecture.drawio) (open it in draw.io / diagrams.net).
 
-Dependencies point one way — `schema → service → repository → connection` — and nothing below the HTTP boundary imports Express or zod, which is why the service can be tested by calling a function instead of standing up a server.
+```
+browser ─HTTP─▶ helmet ─▶ request log ─▶ compression ─▶ rate limit ─▶ controller ─▶ service ─▶ repository ─▶ SQLite
+                (headers)  (request id)                               (zod)                    (SQL)
+```
+
+| Layer      | File                        | Knows about                      | Does not know about |
+| ---------- | --------------------------- | -------------------------------- | ------------------- |
+| Route      | `users/users.routes.ts`     | URL → handler                    | anything else       |
+| Controller | `users/users.controller.ts` | `req`/`res`, zod schemas         | SQL                 |
+| Service    | `users/users.service.ts`    | business rules (facet semantics) | HTTP, SQL           |
+| Repository | `users/users.repository.ts` | SQL, row → object mapping        | HTTP, validation    |
+| Filters    | `users/users.filters.ts`    | the one `WHERE` clause           | everything else     |
+
+`buildFilterSql()` is the only place that defines which users are "in scope". It returns one
+`WITH matched AS (…)` CTE that the count, the page and both facet queries all start from, so a
+facet count can never disagree with the list it produces.
+
+```
+client/src
+├── api/          fetch layer, ApiError, React Query client (retry policy)
+├── hooks/        useFilterState (URL ⇄ state), useDirectory (queries), useTheme
+├── lib/          validation rules shared by forms and URL parsing
+└── components/   UserList (virtualized), UserCard, FilterSidebar, AgeRangeFilter, SearchField…
+
+server/src
+├── index.ts      entry: serve · seed · seed-if-empty · seal · migrate
+├── config.ts     environment, validated at boot
+├── db/           connection, versioned migrations, seed, seal
+├── health/       GET /api/health (readiness)
+├── avatars/      GET /api/avatars/:seed.svg (generated locally)
+├── shared/       logger, request logger, HttpError, error middleware
+└── users/        routes → controller → service → repository → filters
+
+e2e/              Playwright specs
+api/index.mjs     Vercel entry: exports the same Express app
+```
+
+---
 
 ## Database
 
-SQLite, at `server/data/presight.db` (gitignored — recreate it with `npm run seed`).
+SQLite file at `server/data/presight.db` (gitignored). Inspect it with `sqlite3 server/data/presight.db`.
 
-```bash
-npm run seed                       # wipe and re-seed, deterministic
-SEED_USER_COUNT=500 npm run seed   # a smaller set
-npm run seal                       # collapse to a single read-only-safe file
-rm -rf server/data && npm run seed # rebuild from nothing
-sqlite3 server/data/presight.db    # inspect it
-```
+| Table           | Rows    | Notes                                                                        |
+| --------------- | ------- | ---------------------------------------------------------------------------- |
+| `users`         | 10,000  | `CHECK (age BETWEEN 0 AND 130)`, FK → `nationalities` (`ON DELETE RESTRICT`) |
+| `nationalities` | 45      | `name UNIQUE`                                                                |
+| `hobbies`       | 47      | `name UNIQUE`                                                                |
+| `user_hobbies`  | ~42,500 | composite PK `(user_id, hobby_id)`, `WITHOUT ROWID`, FKs `ON DELETE CASCADE` |
 
-The seed is deterministic — every Faker instance is explicitly seeded, so re-running produces byte-identical data and a failing test always reproduces.
+Indexes: `users(nationality_id, id)`, `users(first_name_lc, id)`, `users(last_name_lc, id)`,
+`users(age, id)`, `user_hobbies(hobby_id, user_id)`. The trailing `id` in each matches the
+`ORDER BY <field>, id` tie-break, so a sorted page is read straight off the index.
 
-`seal` exists for read-only deployments. The database normally runs in WAL mode, which is a three-file format: SQLite must write `presight.db-shm` even to serve a `SELECT`, so a WAL database on a read-only filesystem is not slow — it is unreadable. `seal` checkpoints the WAL back into the main file, switches to a rollback journal, vacuums, and removes the sidecars, leaving one self-contained file. A later writable boot restores WAL on its own.
+**Migrations** are a list in `db/schema.ts`. SQLite's `PRAGMA user_version` stores which ones
+ran; each pending one is applied in its own transaction on startup. Migration 2 is a data
+migration (it rewrites old avatar URLs), which is how an existing Docker volume is upgraded
+without losing data.
 
-Four tables. Hobbies are a join table rather than a JSON column, because the brief needs *"has all of these hobbies"* matching and per-hobby counts over a filtered set — both a few lines of SQL against a join table, and slow, awkward string work against a blob.
-
-| Table | Rows | |
-|---|---|---|
-| `users` | 10,000 | `avatar`, `first_name`, `last_name`, `age`, `nationality_id`, plus lowercased name columns |
-| `nationalities` | 45 | |
-| `hobbies` | 47 | |
-| `user_hobbies` | ~43,000 | 0–10 per user |
-
-The lowercased `*_lc` columns exist because SQLite's `LIKE` only case-folds ASCII, and the directory is international — without them, searching for `MARTÍN` would miss *Martín*.
-
-## Production build
-
-```bash
-npm run build
-npm start        # http://localhost:7777 — Express serves the API and the built client
-```
-
-One origin, one process. Deep links work: any non-API GET falls through to the client shell, while unknown `/api/*` paths stay JSON 404s.
-
-## Docker
-
-```bash
-docker compose up --build    # http://localhost:7777
-docker compose down          # stop; the volume keeps the data
-docker compose down -v       # stop and delete the database
-docker compose up -d         # background
-docker compose logs -f app   # follow
-```
-
-| | |
-|---|---|
-| Image | 219MB, `node:24-alpine`, four-stage build |
-| Runs as | the non-root `node` user |
-| Data | named volume `directory-data`, mounted at `/data` |
-| Health | `/api/health`, checked every 30s |
-
-The image ships only production dependencies and compiled output — no `tsx`, no `typescript`, no source. Because SQLite comes from Node's built-in `node:sqlite`, there is no native module to compile and the image needs no build toolchain.
-
-Set `SEED_ON_START=always` to force a re-seed on every boot, or override `SEED_USER_COUNT` for a smaller dataset.
-
-## Deploying
-
-Any container host runs the [Dockerfile](Dockerfile) unchanged, with a volume mounted at `/data`. That path keeps the deployed app byte-identical to what `docker compose up` gives you, and the database stays writable.
-
-Vercel is what [presight-one.vercel.app](https://presight-one.vercel.app) runs on, via [vercel.json](vercel.json) and [api/index.mjs](api/index.mjs) — the static client and the Express app are served from one origin, so the client needs no base path, no API URL and no CORS.
-
-```bash
-vercel          # preview
-vercel --prod
-```
-
-Import it with **Framework Preset: Other** and an empty Build Command; `vercel.json` supplies everything. It builds, seeds and seals the database at build time and ships the 3.4MB file inside the function bundle, then opens it read-only (`DB_READONLY=1`, set in `vercel.json`). The data is therefore immutable — re-seeding means redeploying, which is fine for a read-only directory. Note that GitHub Pages cannot host this app: it serves static files only, and there would be no `/api` behind the client.
+The seed is deterministic (every Faker instance is seeded), so a failing test always reproduces.
+`npm run seal` turns the WAL database into a single self-contained file for read-only hosting
+(Vercel).
 
 ---
 
@@ -135,89 +141,206 @@ Import it with **Framework Preset: Other** and an empty Build Command; `vercel.j
 
 ### `GET /api/users`
 
-| Param | Notes |
-|---|---|
-| `q` | Matched across `first_name` and `last_name`. Every whitespace-separated word must hit one of the two fields, so a full name works and word order does not matter. |
-| `nationalities` | **OR** — a user from any selected country matches |
-| `hobbies` | **AND** — a user must have every selected hobby |
-| `sort` | `first_name` · `last_name` · `age` · `nationality` |
-| `order` | `asc` · `desc` |
-| `page`, `pageSize` | `pageSize` max 100, default 50 |
+| Param              | Notes                                                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `q`                | Normalised (trimmed, whitespace collapsed, NFC). Every word must match `first_name` or `last_name`. Max 120 chars, 10 words. |
+| `nationalities`    | **OR**: any selected country matches. Max 50 values.                                                                         |
+| `hobbies`          | **AND**: the user must have every selected hobby. Max 50 values.                                                             |
+| `ageMin`, `ageMax` | Inclusive whole numbers 0–130, either optional, `ageMin ≤ ageMax`.                                                           |
+| `sort`             | `first_name` · `last_name` · `age` · `nationality` (tie-break: `id`)                                                         |
+| `order`            | `asc` · `desc`                                                                                                               |
+| `page`, `pageSize` | `pageSize` 1–100, default 50                                                                                                 |
 
-List params accept both `?hobbies=a,b` and `?hobbies=a&hobbies=b`.
+List params accept `?hobbies=a,b` and `?hobbies=a&hobbies=b`.
 
 ```json
 {
-  "data": [{ "id": 1, "avatar": "…", "first_name": "…", "last_name": "…",
-             "age": 34, "nationality": "France", "hobbies": ["Chess", "Reading"] }],
-  "pagination": { "page": 1, "pageSize": 50, "total": 417,
-                  "totalPages": 9, "hasMore": true }
+  "data": [
+    {
+      "id": 1,
+      "avatar": "/api/avatars/u1.svg",
+      "first_name": "…",
+      "last_name": "…",
+      "age": 34,
+      "nationality": "France",
+      "hobbies": ["Chess", "Reading"]
+    }
+  ],
+  "pagination": { "page": 1, "pageSize": 50, "total": 417, "totalPages": 9, "hasMore": true }
 }
 ```
 
 ### `GET /api/facets`
 
-Takes `q`, `nationalities` and `hobbies`. Returns the top 20 of each as `{ value, count }`.
-
-It is a separate endpoint on purpose: infinite scroll requests page 2, 3, 4… continuously, and the sidebar must not recompute on every one. Facets refetch only when the text or filters change.
-
-Each facet is scoped by the semantics of its own dimension. **Hobbies** are AND, so every selected hobby narrows the set and the remaining hobbies — counted inside it — are exactly *"what can I narrow by next"*. **Nationalities** are OR, so that facet ignores its own selection; scoping it by itself would leave only the countries already chosen, and "filter by one or more nationalities" would become unreachable from the interface. Its counts still honour the text and hobby filters, and they sum to the total across a multi-country selection.
+Same filter params; returns the top 20 hobbies and nationalities as `{ value, count }`. Hobbies
+are counted within the full filter (AND narrows). Nationalities ignore their own selection (OR),
+otherwise choosing one country would hide all the others.
 
 ### `GET /api/health`
 
-`{ "ok": true }`.
+`200 {"status":"ok","db":{"status":"ok","schemaVersion":2,"users":10000},"uptimeSeconds":12}`,
+or `503` when the database cannot answer. Used by Docker's HEALTHCHECK, `npm run dev` and CI.
+
+### Errors
+
+| Status | When                    | Body                                                                      |
+| ------ | ----------------------- | ------------------------------------------------------------------------- |
+| 400    | invalid query parameter | `{ "error": "Invalid query parameters", "details": { "ageMin": ["…"] } }` |
+| 404    | unknown `/api/*` path   | `{ "error": "No route for GET /api/x" }`                                  |
+| 429    | over the rate limit     | `{ "error": "Too many requests. Please wait a moment and try again." }`   |
+| 500    | unexpected failure      | `{ "error": "Internal server error", "requestId": "…" }`                  |
+
+Every response carries an `X-Request-Id` header (an upstream one is reused if well formed).
+
+### Production behaviour
+
+- **Security headers** (helmet): a strict Content-Security-Policy allowing only this origin,
+  `nosniff`, HSTS, frame protection; no `X-Powered-By`. No CORS: the client is same-origin.
+- **Rate limit**: 600 requests per minute per client IP on `/api/users` and `/api/facets`
+  (`RATE_LIMIT_PER_MINUTE`), with standard `RateLimit` headers. Health and avatars are not
+  limited. The counter is in memory, which is right for one instance; several replicas would
+  share a Redis store or limit at the proxy.
+- **Client IP**: `X-Forwarded-For` is ignored unless `TRUST_PROXY` says how many proxies are in
+  front, so the limit cannot be bypassed with a forged header.
+- **Compression**: gzip for JSON and static files.
+- **Timeouts**: 30 s per request; keep-alive 65 s, longer than typical load-balancer idle timeouts.
+- **Caching**: fingerprinted `/assets/*` and avatars are immutable for a year; `index.html` and
+  the API are not cached.
 
 ---
 
-## Client
+## Logging and troubleshooting
 
-Everything that defines the view lives in the URL — text, selected nationalities, selected hobbies, sort field and direction. Reload or share the link and you get the identical view back; the browser's back button walks the filter history. Nothing else stores view state.
-
-- **Virtualized list** — scrolling all 10,000 records keeps roughly 18 cards in the DOM.
-- **Infinite scroll** — the next page loads as the sentinel row approaches.
-- **Loading, empty and error states**, with a retry and a clear-filters path out.
-- **Responsive** — the filter rail becomes a drawer below 1024px.
-- **Dark by default**, switchable and remembered. Every foreground/background pair is at or above WCAG AA (4.5:1) in both themes.
-- **`/`** focuses the search field.
-
-Two easter eggs: search `presight`, or `peter parker`.
-
-## Tests
+Logs are structured JSON, one object per line on stdout, via pino. Each request produces one
+line with `req.id`, method, url, status and `responseTime` (ms). 4xx are logged at `warn`, 5xx at
+`error` with the stack trace. Development pretty-prints the same records.
 
 ```bash
-npm test         # 43 tests
-npm run typecheck
+docker compose logs -f app                                   # follow
+docker compose logs --since 10m app                          # recent only
+docker compose logs app | grep -o '{.*' | jq 'select(.level >= 50)'           # errors only
+docker compose logs app | grep -o '{.*' | jq 'select(.req.id == "<request id>")'  # one request
+docker compose logs app | grep -o '{.*' | jq 'select(.responseTime > 100)'    # slow requests
+LOG_LEVEL=debug docker compose up                            # more detail
 ```
 
-Node's built-in test runner against an in-memory database — no test framework, no extra dependencies. They target the properties the brief is graded on rather than line coverage: facet counts matching the totals they produce, a full page-walk asserting no duplicates or gaps, AND/OR filter semantics, deterministic ordering across all four sort fields with the `id` tie-break, Unicode search, and SQL injection through `sort`.
+Docker keeps logs in rotated files (`max-size: 10m`, 3 files), so they cannot fill the disk.
 
-## Layout
+**Runbook**
 
+| Symptom                                                 | Check                                                                 | Likely cause / fix                                                             |
+| ------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| UI: "Could not load the directory (reference ab12cd34)" | grep the logs for that request id                                     | stack trace is in the matching `level: 50` line                                |
+| Container `unhealthy`                                   | `curl localhost:7777/api/health`, `docker compose logs app`           | DB missing or corrupt → `docker compose down -v && docker compose up`          |
+| Container restarts in a loop                            | `docker compose logs app \| head`                                     | invalid env var (the first line names it) or failed migration                  |
+| `Ports are not available: 7777`                         | `lsof -i :7777`                                                       | another process on the port; stop it or run `HOST_PORT=8080 docker compose up` |
+| Empty list, "Seed the database"                         | `/api/health` → `users: 0`                                            | `npm run seed`, or `SEED_ON_START=always docker compose up`                    |
+| Server exits on start mentioning Node                   | `node -v`                                                             | Node < 22.5; `nvm use`                                                         |
+| Slow responses                                          | `jq 'select(.responseTime > 100)'`; `EXPLAIN QUERY PLAN` in `sqlite3` | a query not using an index                                                     |
+| UI: "Too many requests" (429)                           | `jq 'select(.res.statusCode == 429)'`                                 | a client over `RATE_LIMIT_PER_MINUTE`; raise it or find the looping client     |
+
+---
+
+## Docker
+
+| Command                                         |                                                 |
+| ----------------------------------------------- | ----------------------------------------------- |
+| `docker compose up --build`                     | build and run in the foreground                 |
+| `docker compose up -d`                          | run in the background                           |
+| `docker compose ps`                             | status, including health                        |
+| `docker compose exec app sh`                    | shell inside the container                      |
+| `docker compose down`                           | stop and remove the container; **data is kept** |
+| `docker compose down -v`                        | also delete the `directory-data` volume         |
+| `docker volume inspect presight_directory-data` | where the data lives on the host                |
+
+Back up the database volume (stop the app first so the file is not mid-write):
+
+```bash
+docker compose stop app
+docker run --rm -v presight_directory-data:/data -v "$PWD":/backup alpine \
+  tar czf /backup/directory-data.tgz -C /data .
+docker compose start app
 ```
-client/src
-├── api/            typed fetch layer + shared response types
-├── hooks/          useFilterState (URL ⇄ state), useDirectory, useTheme
-└── components/     UserList, UserCard, FilterSidebar, SearchField, …
 
-server/src
-├── index.ts        guarded entry point: serve · seed · seal · migrate
-├── db/             connection, schema, seed, seal, vocabularies
-└── users/          routes → controller → service → repository → filters
+Image: ~175MB, `node:24.15.0-alpine`, four-stage build. The runtime stage contains only compiled
+JavaScript, the built client and the server's production dependencies.
 
-api/index.mjs       Vercel entrypoint — exports the same Express app
+Runtime hardening: runs as the non-root `node` user, read-only root filesystem (only the `/data`
+volume and `/tmp` are writable), all Linux capabilities dropped, `no-new-privileges`, `init: true`
+for signal forwarding. `docker stop` sends SIGTERM; the server stops accepting connections,
+finishes in-flight requests, closes the database and exits.
+
+---
+
+## CI/CD
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+1. **quality**: format check, ESLint, typecheck, tests with coverage, `npm audit` (high+)
+2. **e2e**: production build + Playwright on desktop and mobile viewports. Any failed request or
+   console error fails the test.
+3. **docker**: builds the image, starts it with Compose, waits for `healthy`, smoke-tests the API.
+   On `main` it pushes the image to `ghcr.io/<owner>/presight:{latest,sha}`.
+
+Dependabot opens weekly update PRs for npm, GitHub Actions and the Docker base image. Vercel
+deploys the live site from `main` through its Git integration.
+
+---
+
+## Checking a running instance
+
+```bash
+npm run smoke -- https://presight-one.vercel.app   # or http://localhost:7777
 ```
+
+Seven checks: health and data, the user list, search normalisation, facets, validation, avatars,
+and the app shell with its security headers. It prints one line per check with its timing and
+exits 1 if any fails, so it is the first thing to run after a deploy. CI runs it against the
+Docker container.
+
+## Deploying to a server with Docker
+
+CI publishes `ghcr.io/maxim-abuzarov/presight:<commit-sha>` for every commit on `main`.
+
+```bash
+export IMAGE=ghcr.io/maxim-abuzarov/presight:<commit-sha> TRUST_PROXY=1
+docker pull "$IMAGE"
+docker compose up -d --no-build      # same volume: data kept, migrations run on start
+npm run smoke -- http://localhost:7777
+```
+
+Roll back by running the previous SHA the same way. Put a reverse proxy (Caddy, nginx) in front
+for HTTPS, and keep `TRUST_PROXY=1` so the rate limit sees real client IPs.
+
+## Deploying to Vercel
+
+[vercel.json](vercel.json) builds, seeds and seals the database at build time and ships the
+file inside the function bundle, opened read-only (`DB_READONLY=1`). The client is static; `/api/*`
+is rewritten to the Express app exported from [api/index.mjs](api/index.mjs). The same security
+headers the Express app sends are set on the static files in `vercel.json`, and `TRUST_PROXY=1`
+because requests arrive through Vercel's edge. Any container host can run the Dockerfile
+unchanged instead, with a volume at `/data`.
+
+---
 
 ## Configuration
 
-Every setting has a working default, so there is no `.env` to create.
+Every variable has a working default and is validated at startup; an invalid value stops the
+process with a message naming the variable.
 
-| Variable | Default |
-|---|---|
-| `PORT` | `7777` |
-| `DB_PATH` | `server/data/presight.db` |
-| `DB_READONLY` | unset — set to `1` to open the database read-only and skip migrations |
-| `CLIENT_DIST` | `client/dist` |
-| `SEED_USER_COUNT` | `10000` |
-| `NODE_ENV` | unset (development) |
+| Variable                | Default                   |                                                        |
+| ----------------------- | ------------------------- | ------------------------------------------------------ |
+| `PORT`                  | `7777`                    |                                                        |
+| `HOST`                  | all interfaces            |                                                        |
+| `NODE_ENV`              | `development`             | `development` · `production` · `test`                  |
+| `DB_PATH`               | `server/data/presight.db` |                                                        |
+| `DB_READONLY`           | `0`                       | `1` opens read-only and only checks the schema version |
+| `CLIENT_DIST`           | `client/dist`             |                                                        |
+| `SEED_USER_COUNT`       | `10000`                   |                                                        |
+| `SEED_ON_START`         | unset                     | Docker only: `always` re-seeds on every start          |
+| `LOG_LEVEL`             | `debug` dev, `info` prod  | `fatal` … `trace`, `silent`                            |
+| `SHUTDOWN_TIMEOUT_MS`   | `10000`                   | forced exit if draining takes longer                   |
+| `TRUST_PROXY`           | `0`                       | number of reverse proxies in front (Vercel: `1`)       |
+| `RATE_LIMIT_PER_MINUTE` | `600`                     | per IP on the data endpoints; `0` disables             |
 
-Node 22+ reads an env file natively if you want one: `node --env-file=.env dist/index.js`.
+Easter eggs: search `presight`, or `peter parker`.

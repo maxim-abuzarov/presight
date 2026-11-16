@@ -1,12 +1,17 @@
 import type { FacetsResponse, FilterState } from '../api/types.ts';
+import { AgeRangeFilter } from './AgeRangeFilter.tsx';
 import { FacetGroup } from './FacetGroup.tsx';
 
 export interface FilterSidebarProps {
   filters: FilterState;
   facets: FacetsResponse | undefined;
   loading: boolean;
+  /** Set when facets failed to load; the list itself may still be fine. */
+  error: string | null;
+  onRetry: () => void;
   activeFilterCount: number;
   onToggle: (kind: 'nationalities' | 'hobbies', value: string) => void;
+  onAgeRangeChange: (ageMin: number | null, ageMax: number | null) => void;
   onClear: () => void;
 }
 
@@ -14,8 +19,11 @@ export function FilterSidebar({
   filters,
   facets,
   loading,
+  error,
+  onRetry,
   activeFilterCount,
   onToggle,
+  onAgeRangeChange,
   onClear,
 }: FilterSidebarProps) {
   return (
@@ -34,6 +42,26 @@ export function FilterSidebar({
       </div>
 
       <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-4 py-5">
+        {error && (
+          <div
+            role="alert"
+            className="rounded-card border border-line px-3 py-2.5 text-xs text-muted"
+          >
+            <p>Filter counts could not be loaded. {error}</p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-1.5 font-medium text-accent hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        <AgeRangeFilter
+          ageMin={filters.ageMin}
+          ageMax={filters.ageMax}
+          onChange={onAgeRangeChange}
+        />
         <FacetGroup
           title="Nationality"
           hint="Any selected country matches."

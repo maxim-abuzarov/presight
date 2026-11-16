@@ -1,15 +1,16 @@
 import { Faker, base, de, en, es, fr, ja, pt_BR } from '@faker-js/faker';
 
 import { config } from '../config.js';
-import { closeDb, getDb, queryOne } from './connection.js';
+import { logger } from '../shared/logger.js';
+import { closeDb, getDb, queryOne, transaction } from './connection.js';
 import { HOBBIES, NATIONALITIES, type WeightedValue } from './datasets.js';
 import { migrate } from './migrate.js';
 
 const SEED = 20260822;
 
-const AVATAR_STYLE = 'bottts-neutral';
-const avatarUrl = (seed: string): string =>
-  `https://api.dicebear.com/9.x/${AVATAR_STYLE}/svg?seed=${encodeURIComponent(seed)}`;
+// A same-origin path served by avatars.routes.ts. The seed is the user's id: stable, unique and
+// free of characters that would need escaping in a URL.
+const avatarUrl = (id: number): string => `/api/avatars/u${id}.svg`;
 
 const english = new Faker({ locale: [en, base] });
 
@@ -62,20 +63,36 @@ function weightedIndexPicker(weights: number[]): (roll: number) => number {
 
 const weightsOf = (values: WeightedValue[]): number[] => values.map((value) => value.weight);
 
-export function seed(userCount = config.seedUserCount): void {
+/**
+ * Drops and recreates every table, then fills them. Dropping (rather than DELETE FROM) means a
+ * re-seed always produces the latest schema, constraints included, even on an old database.
+ */
+function resetSchema(): void {
+  const db = getDb();
+  db.exec('PRAGMA foreign_keys = OFF');
+  db.exec(`
+    DROP TABLE IF EXISTS user_hobbies;
+    DROP TABLE IF EXISTS users;
+    DROP TABLE IF EXISTS hobbies;
+    DROP TABLE IF EXISTS nationalities;
+    PRAGMA user_version = 0;
+  `);
+  db.exec('PRAGMA foreign_keys = ON');
   migrate();
+}
+
+const normalizeName = (value: string): string => value.normalize('NFC');
+
+export function seed(userCount = config.seedUserCount): void {
+  resetSchema();
   const db = getDb();
 
   for (const faker of ALL_FAKERS) faker.seed(SEED);
   const rng = english;
 
-  db.exec('BEGIN');
-  try {
-    db.exec('DELETE FROM user_hobbies');
-    db.exec('DELETE FROM users');
-    db.exec('DELETE FROM hobbies');
-    db.exec('DELETE FROM nationalities');
-
+  // One transaction for ~50k inserts: SQLite then syncs to disk once instead of 50k times,
+  // which is the difference between ~200ms and minutes. It also makes the seed all-or-nothing.
+  transaction(() => {
     const insertNationality = db.prepare('INSERT INTO nationalities (name) VALUES (?)');
     const insertHobby = db.prepare('INSERT INTO hobbies (name) VALUES (?)');
     const nationalityIds = new Map<string, number>();
@@ -104,12 +121,12 @@ export function seed(userCount = config.seedUserCount): void {
     for (let id = 1; id <= userCount; id += 1) {
       const nationality = NATIONALITIES[pickNationality(roll())]!.name;
       const names = namesFor(nationality);
-      const firstName = names.person.firstName();
-      const lastName = names.person.lastName();
+      const firstName = normalizeName(names.person.firstName());
+      const lastName = normalizeName(names.person.lastName());
 
       insertUser.run(
         id,
-        avatarUrl(`${firstName}-${lastName}-${id}`),
+        avatarUrl(id),
         firstName,
         lastName,
         firstName.toLowerCase(),
@@ -129,13 +146,9 @@ export function seed(userCount = config.seedUserCount): void {
         insertUserHobby.run(id, hobbyIds.get(hobby)!);
       }
     }
+  });
 
-    db.exec('COMMIT');
-  } catch (error) {
-    db.exec('ROLLBACK');
-    throw error;
-  }
-
+  // Gives the query planner real row counts and index selectivity for the fresh data.
   db.exec('ANALYZE');
 }
 
@@ -145,19 +158,33 @@ export function runSeed(): void {
   const db = getDb();
   const users = (db.prepare('SELECT COUNT(*) AS c FROM users').get() as { c: number }).c;
   const links = (db.prepare('SELECT COUNT(*) AS c FROM user_hobbies').get() as { c: number }).c;
-  console.log(
-    `Seeded ${users} users and ${links} hobby links into ${config.dbPath} in ${Date.now() - started}ms.`,
+  logger.info(
+    { users, hobbyLinks: links, dbPath: config.dbPath, durationMs: Date.now() - started },
+    'Seeded database',
   );
   closeDb();
 }
 
+function existingUserCount(): number {
+  const table = queryOne<{ name: string } | undefined>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'users'",
+  );
+  if (!table) return 0;
+  return queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM users').count;
+}
+
+/**
+ * Container start-up: a fresh volume is seeded (which creates the schema); an existing one keeps
+ * its data and only gets pending migrations. Checking for data before migrating means a first
+ * boot applies each migration once, not once here and again inside the seed's schema reset.
+ */
 export function runSeedIfEmpty(): void {
-  migrate();
-  const { count } = queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM users');
-  if (count > 0) {
-    console.log(`Database already holds ${count} users; skipping seed.`);
-    closeDb();
+  const count = existingUserCount();
+  if (count === 0) {
+    runSeed();
     return;
   }
-  runSeed();
+  migrate();
+  logger.info({ users: count }, 'Database already seeded; skipping');
+  closeDb();
 }

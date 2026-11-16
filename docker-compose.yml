@@ -1,17 +1,52 @@
+# Local run: `docker compose up --build`, then open http://localhost:7777.
 services:
   app:
     build: .
-    image: people-directory
+    image: ${IMAGE:-people-directory:local}
     ports:
-      - '7777:7777'
+      # host:container. Override the host side if 7777 is taken: HOST_PORT=8080 docker compose up
+      - '${HOST_PORT:-7777}:7777'
     environment:
       NODE_ENV: production
       PORT: 7777
       DB_PATH: /data/presight.db
       SEED_USER_COUNT: 10000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # 0 when clients connect directly; 1 behind one reverse proxy (nginx, Caddy, a load balancer).
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-600}
     volumes:
+      # Named volume managed by Docker: survives `down` and image rebuilds, removed by `down -v`.
       - directory-data:/data
+    # Same probe as the image's HEALTHCHECK, declared here so `docker compose ps` shows it.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:7777/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
     restart: unless-stopped
+    # tini as PID 1: forwards signals and reaps zombie processes.
+    init: true
+    stop_grace_period: 15s
+    # Hardening: immutable root filesystem (only /data and /tmp are writable), no Linux
+    # capabilities, no privilege escalation through setuid binaries.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    # Logs are JSON lines on stdout; Docker stores them with rotation so they cannot fill the disk.
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
 volumes:
   directory-data:

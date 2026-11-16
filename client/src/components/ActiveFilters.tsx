@@ -5,13 +5,35 @@ interface ActiveFiltersProps {
   filters: FilterState;
   onToggle: (kind: 'nationalities' | 'hobbies', value: string) => void;
   onClearQuery: () => void;
+  onClearAgeRange: () => void;
   onClearAll: () => void;
 }
 
-export function ActiveFilters({ filters, onToggle, onClearQuery, onClearAll }: ActiveFiltersProps) {
+const ageRangeLabel = (ageMin: number | null, ageMax: number | null): string => {
+  if (ageMin !== null && ageMax !== null) return `Age ${ageMin}–${ageMax}`;
+  if (ageMin !== null) return `Age ${ageMin}+`;
+  return `Age up to ${ageMax}`;
+};
+
+export function ActiveFilters({
+  filters,
+  onToggle,
+  onClearQuery,
+  onClearAgeRange,
+  onClearAll,
+}: ActiveFiltersProps) {
   const chips = [
     ...(filters.q
       ? [{ key: `q:${filters.q}`, label: `“${filters.q}”`, remove: onClearQuery }]
+      : []),
+    ...(filters.ageMin !== null || filters.ageMax !== null
+      ? [
+          {
+            key: 'age',
+            label: ageRangeLabel(filters.ageMin, filters.ageMax),
+            remove: onClearAgeRange,
+          },
+        ]
       : []),
     ...filters.nationalities.map((value) => ({
       key: `n:${value}`,

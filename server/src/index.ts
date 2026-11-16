@@ -32,7 +32,11 @@ switch (task) {
     break;
   }
   default: {
-    console.error(`Unknown task "${task}". Expected one of: serve, seed, seed-if-empty, seal, migrate.`);
+    const { logger } = await import('./shared/logger.js');
+    logger.fatal(
+      { task },
+      'Unknown task. Expected one of: serve, seed, seed-if-empty, seal, migrate.',
+    );
     process.exit(1);
   }
 }

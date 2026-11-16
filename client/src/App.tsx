@@ -27,8 +27,15 @@ const EASTER_EGGS: Record<string, 'presight' | 'spider'> = {
   'spider man': 'spider',
 };
 
+function describeError(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'Something went wrong while loading records.';
+  return error.requestId
+    ? `${error.message} (reference ${error.requestId.slice(0, 8)})`
+    : error.message;
+}
+
 export default function App() {
-  const { filters, setQuery, setSort, toggleFacet, clearFilters, activeFilterCount } =
+  const { filters, setQuery, setSort, toggleFacet, setAgeRange, clearFilters, activeFilterCount } =
     useFilterState();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -44,41 +51,35 @@ export default function App() {
   const total = usersQuery.data?.pages[0]?.pagination.total ?? 0;
 
   const loadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
-  const easterEgg = EASTER_EGGS[filters.q.trim().toLowerCase().replace(/\s+/g, ' ')];
+  const easterEgg = EASTER_EGGS[filters.q.toLowerCase()];
   const isInitialLoad = usersQuery.isPending;
-  const error = usersQuery.error ?? facetsQuery.error;
+  // A failed *next* page keeps the records already on screen and offers a retry at the bottom;
+  // only a failure of the first page replaces the list with the error state. Facet failures
+  // stay in the sidebar — the list is still usable without them.
+  const listError = usersQuery.isFetchNextPageError ? null : usersQuery.error;
 
   const sidebar = {
     filters,
     facets: facetsQuery.data,
     loading: facetsQuery.isPending,
+    error: facetsQuery.error ? describeError(facetsQuery.error) : null,
+    onRetry: () => facetsQuery.refetch(),
     activeFilterCount,
     onToggle: toggleFacet,
+    onAgeRangeChange: setAgeRange,
     onClear: clearFilters,
   };
 
-  const retry = () => {
-    usersQuery.refetch();
-    facetsQuery.refetch();
-  };
-
   function renderResults() {
-    if (error) {
+    if (listError) {
       return (
         <Container className="pt-6">
-          <ErrorState
-            message={
-              error instanceof ApiError
-                ? error.message
-                : 'Something went wrong while loading records.'
-            }
-            onRetry={retry}
-          />
+          <ErrorState message={describeError(listError)} onRetry={() => usersQuery.refetch()} />
         </Container>
       );
     }
@@ -116,6 +117,7 @@ export default function App() {
           users={users}
           hasMore={hasNextPage}
           isFetchingMore={isFetchingNextPage}
+          loadMoreError={usersQuery.isFetchNextPageError ? describeError(usersQuery.error) : null}
           onLoadMore={loadMore}
         />
       </div>
@@ -174,6 +176,7 @@ export default function App() {
                 filters={filters}
                 onToggle={toggleFacet}
                 onClearQuery={() => setQuery('')}
+                onClearAgeRange={() => setAgeRange(null, null)}
                 onClearAll={clearFilters}
               />
             </Container>
