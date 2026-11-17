@@ -150,7 +150,8 @@ SQLite file at `server/data/presight.db` (gitignored). Inspect it with `sqlite3 
 
 Indexes: `users(nationality_id, id)`, `users(first_name_lc, id)`, `users(last_name_lc, id)`,
 `users(age, id)`, `user_hobbies(hobby_id, user_id)`. The trailing `id` in each matches the
-`ORDER BY <field>, id` tie-break, so a sorted page is read straight off the index.
+`ORDER BY <field>, id` tie-break, so the planner can read a sorted page straight off the index
+instead of sorting (it does for the name sorts; for age it currently prefers a ~5 ms sort step).
 
 **Migrations** are a list in `db/schema.ts`. SQLite's `PRAGMA user_version` stores which ones
 ran; each pending one is applied in its own transaction on startup. Migration 2 is a data
