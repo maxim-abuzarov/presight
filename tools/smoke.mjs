@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-// Smoke test for a running instance: `npm run smoke -- https://presight-one.vercel.app`
-// (defaults to http://localhost:7777). Checks the things a user needs, prints one line per
-// check with its timing, and exits 1 if any check fails, so it works by hand, after a deploy
-// and in CI.
 
 const base = (process.argv[2] ?? process.env.SMOKE_URL ?? 'http://localhost:7777').replace(
   /\/$/,
@@ -10,7 +6,6 @@ const base = (process.argv[2] ?? process.env.SMOKE_URL ?? 'http://localhost:7777
 );
 const TIMEOUT_MS = 10_000;
 
-/** A check returns a short detail string on success and calls fail() otherwise. */
 const fail = (message) => {
   throw new Error(message);
 };
@@ -61,8 +56,8 @@ const checks = [
     },
   },
   {
-    name: 'validation: inverted age range is rejected',
-    path: '/api/users?ageMin=9&ageMax=1',
+    name: 'validation: unknown sort field is rejected',
+    path: '/api/users?sort=password',
     expect: async (res) => {
       expectStatus(res, 400);
       return 'rejected with 400';

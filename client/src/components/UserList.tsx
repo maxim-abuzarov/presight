@@ -8,7 +8,6 @@ interface UserListProps {
   users: User[];
   hasMore: boolean;
   isFetchingMore: boolean;
-  /** Set when the last next-page request failed; automatic loading pauses until retried. */
   loadMoreError: string | null;
   onLoadMore: () => void;
 }
@@ -38,7 +37,6 @@ export function UserList({
   const lastRow = virtualRows[virtualRows.length - 1];
 
   useEffect(() => {
-    // After a failure, stop auto-loading: retrying in a loop would hammer a failing server.
     if (!lastRow || !hasMore || isFetchingMore || loadMoreError) return;
     if (lastRow.index >= users.length - 1) onLoadMore();
   }, [lastRow, hasMore, isFetchingMore, loadMoreError, users.length, onLoadMore]);

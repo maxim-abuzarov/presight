@@ -61,7 +61,6 @@ beforeEach(() => {
     });
   });
 
-  // jsdom has no layout: give the virtualised list a viewport so rows render.
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(800);
   vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(800);
 });
@@ -77,11 +76,11 @@ describe('App', () => {
   });
 
   it('restores filters from the URL and sends only valid, normalised parameters', async () => {
-    renderWithProviders(<App />, '/?q=%20%20ana%20%20&ageMin=abc&hobbies=Chess&sort=bogus');
+    renderWithProviders(<App />, '/?q=%20%20ana%20%20&hobbies=Chess&sort=bogus&order=sideways');
     await screen.findByText('2 people match');
     const usersRequest = requests.find((url) => url.pathname === '/api/users')!;
     expect(usersRequest.searchParams.get('q')).toBe('ana');
-    expect(usersRequest.searchParams.has('ageMin')).toBe(false);
+    expect(usersRequest.searchParams.get('order')).toBe('asc');
     expect(usersRequest.searchParams.getAll('hobbies')).toEqual(['Chess']);
     expect(usersRequest.searchParams.get('sort')).toBe('first_name');
   });

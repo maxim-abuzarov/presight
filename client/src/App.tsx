@@ -35,7 +35,7 @@ function describeError(error: unknown): string {
 }
 
 export default function App() {
-  const { filters, setQuery, setSort, toggleFacet, setAgeRange, clearFilters, activeFilterCount } =
+  const { filters, setQuery, setSort, toggleFacet, clearFilters, activeFilterCount } =
     useFilterState();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -58,9 +58,6 @@ export default function App() {
 
   const easterEgg = EASTER_EGGS[filters.q.toLowerCase()];
   const isInitialLoad = usersQuery.isPending;
-  // A failed *next* page keeps the records already on screen and offers a retry at the bottom;
-  // only a failure of the first page replaces the list with the error state. Facet failures
-  // stay in the sidebar — the list is still usable without them.
   const listError = usersQuery.isFetchNextPageError ? null : usersQuery.error;
 
   const sidebar = {
@@ -71,7 +68,6 @@ export default function App() {
     onRetry: () => facetsQuery.refetch(),
     activeFilterCount,
     onToggle: toggleFacet,
-    onAgeRangeChange: setAgeRange,
     onClear: clearFilters,
   };
 
@@ -176,7 +172,6 @@ export default function App() {
                 filters={filters}
                 onToggle={toggleFacet}
                 onClearQuery={() => setQuery('')}
-                onClearAgeRange={() => setAgeRange(null, null)}
                 onClearAll={clearFilters}
               />
             </Container>

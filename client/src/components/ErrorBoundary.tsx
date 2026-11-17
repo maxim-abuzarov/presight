@@ -4,11 +4,6 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-/**
- * Last line of defence for rendering bugs. React unmounts the whole tree on an uncaught render
- * error, which leaves a blank page; this keeps a readable message and a way out instead.
- * (Data-fetching errors never get here — they are values on the query and have their own UI.)
- */
 export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
   state: ErrorBoundaryState = { error: null };
 
@@ -17,7 +12,6 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBound
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    // In a real deployment this would be reported to an error tracker (Sentry, etc.).
     console.error('Unhandled render error', error, info.componentStack);
   }
 

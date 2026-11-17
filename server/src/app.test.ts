@@ -121,12 +121,6 @@ describe('query parsing', () => {
     assert.ok(b.data.some((user) => user.id === someone.id));
   });
 
-  it('accepts an empty age bound as "no bound"', async () => {
-    const all = await getJson<UsersResponse>('/api/users?pageSize=1');
-    const empty = await getJson<UsersResponse>('/api/users?pageSize=1&ageMin=&ageMax=');
-    assert.equal(empty.pagination.total, all.pagination.total);
-  });
-
   it('ignores blank and duplicate filter values', async () => {
     const noisy = await getJson<UsersResponse>('/api/users?hobbies=Reading,,Reading&pageSize=1');
     const clean = await getJson<UsersResponse>('/api/users?hobbies=Reading&pageSize=1');
@@ -142,16 +136,12 @@ describe('input validation', () => {
     ['zero page', '/api/users?page=0'],
     ['non-numeric page', '/api/users?page=abc'],
     ['oversized pageSize', '/api/users?pageSize=5000'],
-    ['inverted age range', '/api/users?ageMin=50&ageMax=20'],
-    ['out-of-range age', '/api/users?ageMin=-5'],
-    ['non-numeric age', '/api/users?ageMax=old'],
-    ['fractional age', '/api/users?ageMin=20.5'],
     ['search longer than the limit', `/api/users?q=${'a'.repeat(121)}`],
     [
       'search with too many words',
       `/api/users?q=${Array.from({ length: 11 }, () => 'a').join('%20')}`,
     ],
-    ['inverted age range on facets', '/api/facets?ageMin=50&ageMax=20'],
+    ['oversized search on facets', `/api/facets?q=${'a'.repeat(121)}`],
   ];
 
   for (const [name, path] of rejected) {

@@ -6,13 +6,6 @@ import { logger } from '../shared/logger.js';
 
 export const healthRouter: Router = Router();
 
-/**
- * Readiness, not just liveness: it answers 200 only when the process can actually serve data —
- * the database opens, the schema is applied and a real query succeeds. Docker's HEALTHCHECK,
- * the e2e suite and the dev script all wait on this endpoint, so "healthy" means "safe to send
- * traffic", and a missing or broken database shows up as 503 here rather than as failed API
- * calls in the browser.
- */
 healthRouter.get('/health', (_req, res) => {
   try {
     const { users } = getDb().prepare('SELECT COUNT(*) AS users FROM users').get() as {

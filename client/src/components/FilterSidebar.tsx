@@ -1,17 +1,14 @@
 import type { FacetsResponse, FilterState } from '../api/types.ts';
-import { AgeRangeFilter } from './AgeRangeFilter.tsx';
 import { FacetGroup } from './FacetGroup.tsx';
 
 export interface FilterSidebarProps {
   filters: FilterState;
   facets: FacetsResponse | undefined;
   loading: boolean;
-  /** Set when facets failed to load; the list itself may still be fine. */
   error: string | null;
   onRetry: () => void;
   activeFilterCount: number;
   onToggle: (kind: 'nationalities' | 'hobbies', value: string) => void;
-  onAgeRangeChange: (ageMin: number | null, ageMax: number | null) => void;
   onClear: () => void;
 }
 
@@ -23,7 +20,6 @@ export function FilterSidebar({
   onRetry,
   activeFilterCount,
   onToggle,
-  onAgeRangeChange,
   onClear,
 }: FilterSidebarProps) {
   return (
@@ -57,11 +53,6 @@ export function FilterSidebar({
             </button>
           </div>
         )}
-        <AgeRangeFilter
-          ageMin={filters.ageMin}
-          ageMax={filters.ageMax}
-          onChange={onAgeRangeChange}
-        />
         <FacetGroup
           title="Nationality"
           hint="Any selected country matches."

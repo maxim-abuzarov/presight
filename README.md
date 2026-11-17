@@ -1,18 +1,18 @@
 # People Directory
 
-A searchable, filterable directory of 10,000 people. Type a name, narrow by nationality, hobbies
-and age, and the sidebar always shows the top 20 of each **for the result set you are looking
-at**, with counts that match what selecting them returns.
+A searchable, filterable directory of 10,000 people. Type a name, narrow by nationality and hobbies,
+and the sidebar always shows the top 20 of each **for the result set you are looking at**, with
+counts that match what selecting them returns.
 
 Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md). Live at
 **[presight-one.vercel.app](https://presight-one.vercel.app)**.
 
-- **React 19** client: URL-synced state, virtualized infinite list, validated forms, light/dark
+- **React 19** client: URL-synced state, virtualized infinite list, validated search, light/dark
 - **Express 5** API: layered routes → controller → service → repository, zod at the boundary
 - **SQLite** through Node's built-in `node:sqlite`: versioned migrations, constraints, indexes
 - **Production concerns**: structured JSON logs with request ids, readiness health check,
   security headers, rate limiting, compression, graceful shutdown, hardened Docker image
-- **Quality gate**: CI runs format, lint, types, 169 unit/integration tests, 22 end-to-end tests,
+- **Quality gate**: CI runs format, lint, types, 136 unit/integration tests, 20 end-to-end tests,
   a dependency audit and a container smoke test on every push
 
 ---
@@ -93,8 +93,8 @@ facet count can never disagree with the list it produces.
 client/src
 ├── api/          fetch layer, ApiError, React Query client (retry policy)
 ├── hooks/        useFilterState (URL ⇄ state), useDirectory (queries), useTheme
-├── lib/          validation rules shared by forms and URL parsing
-└── components/   UserList (virtualized), UserCard, FilterSidebar, AgeRangeFilter, SearchField…
+├── lib/          search validation and normalisation, mirrored from the server
+└── components/   UserList (virtualized), UserCard, FilterSidebar, SearchField…
 
 server/src
 ├── index.ts      entry: serve · seed · seed-if-empty · seal · migrate
@@ -110,6 +110,32 @@ api/index.mjs     Vercel entry: exports the same Express app
 ```
 
 ---
+
+## Design notes
+
+- **No `AbortSignal` in the query functions.** When a React Query function reads the signal, the
+  request is aborted as soon as the query loses its observers, and StrictMode's development
+  double mount does exactly that, so every page load showed aborted `/api/users` and
+  `/api/facets` requests. The queries take milliseconds, so cancelling them saves nothing;
+  responses are stored per query key, so a late response can never overwrite a newer one.
+- **The URL is the only view state.** It is parsed leniently into a state that is always valid
+  (unknown sort → default, lists capped, search normalised) and rewritten to its canonical form,
+  so a hand-edited link shows the right page instead of an error.
+- **One search normalisation rule on both sides**: NFC, zero-width characters removed, every run
+  of whitespace collapsed, trimmed. The client applies it before writing the URL; the server
+  applies it again because it must not trust the client. A contract test imports the server's
+  rules into the client test run and fails if the two drift apart.
+- **Errors are scoped to what failed**: a failed first page shows the error state; a failed next
+  page keeps the loaded rows and offers a retry; failed facets stay in the sidebar. Only network
+  errors and 5xx are retried.
+- **Avatars and the font are served from this origin**, so the page makes no third-party
+  requests and the Content-Security-Policy allows only `'self'`.
+- **The rate limiter is attached per route** (`/api/users`, `/api/facets`), not to the router:
+  router-level middleware would also count avatar requests.
+- **`node:sqlite` is synchronous.** A query runs to completion before any other JavaScript, so the
+  count and the page of one request see the same data; the trade-off is that a slow query would
+  block the event loop, which is why every filter and sort path is indexed and `pageSize` is
+  capped.
 
 ## Database
 
@@ -146,7 +172,6 @@ The seed is deterministic (every Faker instance is seeded), so a failing test al
 | `q`                | Normalised (trimmed, whitespace collapsed, NFC). Every word must match `first_name` or `last_name`. Max 120 chars, 10 words. |
 | `nationalities`    | **OR**: any selected country matches. Max 50 values.                                                                         |
 | `hobbies`          | **AND**: the user must have every selected hobby. Max 50 values.                                                             |
-| `ageMin`, `ageMax` | Inclusive whole numbers 0–130, either optional, `ageMin ≤ ageMax`.                                                           |
 | `sort`             | `first_name` · `last_name` · `age` · `nationality` (tie-break: `id`)                                                         |
 | `order`            | `asc` · `desc`                                                                                                               |
 | `page`, `pageSize` | `pageSize` 1–100, default 50                                                                                                 |
@@ -183,12 +208,12 @@ or `503` when the database cannot answer. Used by Docker's HEALTHCHECK, `npm run
 
 ### Errors
 
-| Status | When                    | Body                                                                      |
-| ------ | ----------------------- | ------------------------------------------------------------------------- |
-| 400    | invalid query parameter | `{ "error": "Invalid query parameters", "details": { "ageMin": ["…"] } }` |
-| 404    | unknown `/api/*` path   | `{ "error": "No route for GET /api/x" }`                                  |
-| 429    | over the rate limit     | `{ "error": "Too many requests. Please wait a moment and try again." }`   |
-| 500    | unexpected failure      | `{ "error": "Internal server error", "requestId": "…" }`                  |
+| Status | When                    | Body                                                                    |
+| ------ | ----------------------- | ----------------------------------------------------------------------- |
+| 400    | invalid query parameter | `{ "error": "Invalid query parameters", "details": { "sort": ["…"] } }` |
+| 404    | unknown `/api/*` path   | `{ "error": "No route for GET /api/x" }`                                |
+| 429    | over the rate limit     | `{ "error": "Too many requests. Please wait a moment and try again." }` |
+| 500    | unexpected failure      | `{ "error": "Internal server error", "requestId": "…" }`                |
 
 Every response carries an `X-Request-Id` header (an upstream one is reused if well formed).
 

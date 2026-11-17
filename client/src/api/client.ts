@@ -2,10 +2,6 @@ import type { FacetsResponse, FilterState, UsersResponse } from './types.ts';
 
 export const PAGE_SIZE = 50;
 
-/**
- * Every failure the UI can show is an ApiError: a network failure (status undefined), a 4xx
- * (the request was wrong — retrying will not help) or a 5xx (the server failed — it might).
- */
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -26,8 +22,6 @@ function filterParams(filters: FilterState): URLSearchParams {
   if (filters.q) params.set('q', filters.q);
   for (const value of filters.nationalities) params.append('nationalities', value);
   for (const value of filters.hobbies) params.append('hobbies', value);
-  if (filters.ageMin !== null) params.set('ageMin', String(filters.ageMin));
-  if (filters.ageMax !== null) params.set('ageMax', String(filters.ageMax));
   return params;
 }
 

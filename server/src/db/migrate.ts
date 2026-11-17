@@ -8,11 +8,6 @@ export function schemaVersion(): number {
   return row.user_version;
 }
 
-/**
- * Applies every migration newer than the database's user_version, each in its own transaction.
- * Idempotent: on an up-to-date database it does nothing. A read-only database cannot be
- * migrated, so it is only checked — and a stale one is a startup error, not a runtime surprise.
- */
 export function migrate(): void {
   const db = getDb();
   const current = schemaVersion();
@@ -32,7 +27,6 @@ export function migrate(): void {
     db.exec('BEGIN IMMEDIATE');
     try {
       db.exec(migration.sql);
-      // PRAGMA cannot take a bound parameter; the value is an integer literal from this file.
       db.exec(`PRAGMA user_version = ${migration.version}`);
       db.exec('COMMIT');
       logger.info({ version: migration.version, migration: migration.name }, 'Applied migration');

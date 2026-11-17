@@ -1,4 +1,3 @@
-# Weekly pull requests for outdated or vulnerable dependencies; CI verifies each one.
 version: 2
 updates:
   - package-ecosystem: npm

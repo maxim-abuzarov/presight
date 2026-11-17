@@ -1,4 +1,12 @@
-import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 
 import { useDebouncedValue } from '../hooks/useDebouncedValue.ts';
 import { useSearchHotkey } from '../hooks/useSearchHotkey.ts';
@@ -10,12 +18,6 @@ interface SearchFieldProps {
   onChange: (value: string) => void;
 }
 
-/**
- * The input keeps exactly what the user typed (a trailing space while typing a second word must
- * not be eaten), but what leaves the component is always normalised: trimmed, whitespace runs
- * collapsed. So "  anna   smith " and "anna smith" are one search, one URL and one cache entry,
- * and a whitespace-only box means no search. Enter applies immediately, skipping the debounce.
- */
 export function SearchField({ value, onChange }: SearchFieldProps) {
   const [draft, setDraft] = useState(value);
   const debounced = useDebouncedValue(draft);
@@ -25,21 +27,21 @@ export function SearchField({ value, onChange }: SearchFieldProps) {
   const lastPushed = useRef(value);
   const error = searchError(debounced);
 
-  const push = (raw: string) => {
-    if (searchError(raw)) return;
-    const normalized = normalizeSearch(raw);
-    if (normalized === lastPushed.current) return;
-    lastPushed.current = normalized;
-    onChange(normalized);
-  };
+  const push = useCallback(
+    (raw: string) => {
+      if (searchError(raw)) return;
+      const normalized = normalizeSearch(raw);
+      if (normalized === lastPushed.current) return;
+      lastPushed.current = normalized;
+      onChange(normalized);
+    },
+    [onChange],
+  );
 
   useEffect(() => {
     push(debounced);
-    // `push` is recreated each render; only a new debounced value should trigger it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced]);
+  }, [debounced, push]);
 
-  // The URL changed from outside (Back button, "Clear all", a chip): show the new value.
   useEffect(() => {
     if (value === lastPushed.current) return;
     lastPushed.current = value;

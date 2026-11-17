@@ -9,15 +9,11 @@ export default defineConfig({
   server: {
     port: 5555,
     strictPort: true,
-    // The browser only ever talks to this origin; Vite forwards /api to the Express server.
-    // Same origin in development and production means no CORS and no environment-specific URLs.
     proxy: {
       '/api': {
         target: API_URL,
         changeOrigin: true,
         configure(proxy) {
-          // Without this, a stopped API surfaces as an opaque 500 from Vite. Answer the way the
-          // real API would — JSON with an `error` — so the UI shows a meaningful message.
           proxy.on('error', (error, _req, res) => {
             const response = res as ServerResponse;
             if (response.headersSent) return;
@@ -48,7 +44,6 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/test/**',
         'src/main.tsx',
-        // Decorative easter eggs and icon paths: no behaviour worth asserting.
         'src/components/{SpiderWeb,Presight,PresightLogo,Icon}.tsx',
       ],
       reporter: ['text-summary', 'text', 'html'],

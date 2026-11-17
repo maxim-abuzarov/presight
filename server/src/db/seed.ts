@@ -8,8 +8,6 @@ import { migrate } from './migrate.js';
 
 const SEED = 20260822;
 
-// A same-origin path served by avatars.routes.ts. The seed is the user's id: stable, unique and
-// free of characters that would need escaping in a URL.
 const avatarUrl = (id: number): string => `/api/avatars/u${id}.svg`;
 
 const english = new Faker({ locale: [en, base] });
@@ -63,10 +61,6 @@ function weightedIndexPicker(weights: number[]): (roll: number) => number {
 
 const weightsOf = (values: WeightedValue[]): number[] => values.map((value) => value.weight);
 
-/**
- * Drops and recreates every table, then fills them. Dropping (rather than DELETE FROM) means a
- * re-seed always produces the latest schema, constraints included, even on an old database.
- */
 function resetSchema(): void {
   const db = getDb();
   db.exec('PRAGMA foreign_keys = OFF');
@@ -90,8 +84,6 @@ export function seed(userCount = config.seedUserCount): void {
   for (const faker of ALL_FAKERS) faker.seed(SEED);
   const rng = english;
 
-  // One transaction for ~50k inserts: SQLite then syncs to disk once instead of 50k times,
-  // which is the difference between ~200ms and minutes. It also makes the seed all-or-nothing.
   transaction(() => {
     const insertNationality = db.prepare('INSERT INTO nationalities (name) VALUES (?)');
     const insertHobby = db.prepare('INSERT INTO hobbies (name) VALUES (?)');
@@ -148,7 +140,6 @@ export function seed(userCount = config.seedUserCount): void {
     }
   });
 
-  // Gives the query planner real row counts and index selectivity for the fresh data.
   db.exec('ANALYZE');
 }
 
@@ -173,11 +164,6 @@ function existingUserCount(): number {
   return queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM users').count;
 }
 
-/**
- * Container start-up: a fresh volume is seeded (which creates the schema); an existing one keeps
- * its data and only gets pending migrations. Checking for data before migrating means a first
- * boot applies each migration once, not once here and again inside the seed's schema reset.
- */
 export function runSeedIfEmpty(): void {
   const count = existingUserCount();
   if (count === 0) {

@@ -13,9 +13,7 @@ test.describe('startup', () => {
     await page.goto('/');
     await expect(peopleCount(page)).toHaveText('2,000 people match');
     await expect(page.getByRole('article').first()).toBeVisible();
-    // One list request and one facet request: nothing aborted and retried.
     expect(apiCalls).toHaveLength(2);
-    // On a plain page load nothing at all may fail, images included.
     await page.waitForLoadState('networkidle');
     expect(anyFailure).toEqual([]);
   });
@@ -56,7 +54,7 @@ test.describe('search', () => {
   });
 
   test('canonicalises a hand-edited URL instead of failing', async ({ page }) => {
-    await page.goto('/?q=%20%20anna%20%20&ageMin=abc&sort=bogus');
+    await page.goto('/?q=%20%20anna%20%20&sort=bogus&order=sideways');
     await expect(page).toHaveURL(/\?q=anna$/);
     await expect(page.getByRole('searchbox')).toHaveValue('anna');
   });
@@ -90,29 +88,6 @@ test.describe('filters', () => {
 
     await page.reload();
     await expect.poll(() => countOf(page)).toBe(expected);
-  });
-
-  test('validates the age range and only applies a valid one', async ({ page }) => {
-    await page.goto('/');
-    const filters = await openFilters(page);
-    const min = filters.getByLabel('Minimum age');
-    const max = filters.getByLabel('Maximum age');
-
-    await min.fill('50');
-    await max.fill('20');
-    await expect(
-      filters.getByText('Maximum age must be greater than or equal to minimum age.'),
-    ).toBeVisible();
-    await expect(max).toHaveAttribute('aria-invalid', 'true');
-    await expect(page).not.toHaveURL(/ageMax/);
-
-    await max.fill('60');
-    await expect(page).toHaveURL(/ageMin=50&ageMax=60/);
-    await expect(filters.getByRole('alert')).toHaveCount(0);
-
-    await min.fill('abc');
-    await expect(filters.getByText('Minimum age must be a whole number.')).toBeVisible();
-    await expect(page).toHaveURL(/ageMin=50&ageMax=60/);
   });
 });
 

@@ -41,8 +41,6 @@ export interface FilterState {
   q: string;
   nationalities: string[];
   hobbies: string[];
-  ageMin: number | null;
-  ageMax: number | null;
   sort: SortField;
   order: SortOrder;
 }

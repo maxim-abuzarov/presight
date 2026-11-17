@@ -3,7 +3,6 @@ import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import { after, before, describe, it } from 'node:test';
 
-// Config is read once at import, so the low limit must be set before the app is loaded.
 process.env.RATE_LIMIT_PER_MINUTE = '3';
 
 let server: Server;

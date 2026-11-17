@@ -23,17 +23,6 @@ describe('parseFilters', () => {
     expect(filters.sort).toBe('first_name');
     expect(filters.order).toBe('asc');
   });
-
-  it('keeps a valid age range', () => {
-    expect(parse('ageMin=20&ageMax=30')).toMatchObject({ ageMin: 20, ageMax: 30 });
-  });
-
-  it.each(['ageMin=abc', 'ageMin=-1', 'ageMax=999', 'ageMin=50&ageMax=20', 'ageMin=1.5'])(
-    'drops an invalid age range from %s rather than sending it to the API',
-    (query) => {
-      expect(parse(query)).toMatchObject({ ageMin: null, ageMax: null });
-    },
-  );
 });
 
 describe('serializeFilters', () => {
@@ -47,8 +36,6 @@ describe('serializeFilters', () => {
       q: 'anna',
       nationalities: ['France', 'Japan'],
       hobbies: ['Chess'],
-      ageMin: 20,
-      ageMax: null,
       sort: 'age' as const,
       order: 'desc' as const,
     };

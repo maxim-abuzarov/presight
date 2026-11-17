@@ -1,14 +1,3 @@
-/**
- * Versioned, forward-only migrations.
- *
- * SQLite keeps an integer in the database header, `PRAGMA user_version`, that nothing else uses.
- * Each migration below runs once, inside its own transaction, and bumps that number — so a
- * database always knows which schema it has, a half-applied migration rolls back, and adding a
- * column later means appending a migration rather than editing one that already ran somewhere.
- *
- * Migration 1 uses IF NOT EXISTS so a database created before versioning existed (user_version 0
- * but tables present) upgrades cleanly instead of failing on "table already exists".
- */
 export interface Migration {
   version: number;
   name: string;
@@ -55,9 +44,6 @@ export const MIGRATIONS: readonly Migration[] = [
     `,
   },
   {
-    // A data migration: databases seeded before avatars were served by this app still point at
-    // api.dicebear.com, which the Content-Security-Policy now blocks. Rewrite them in place;
-    // a database seeded after this change matches nothing and is untouched.
     version: 2,
     name: 'serve avatars from our own origin',
     sql: `

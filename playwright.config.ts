@@ -3,12 +3,6 @@ import { defineConfig, devices } from '@playwright/test';
 const PORT = Number(process.env.E2E_PORT ?? 7788);
 const DB_PATH = 'e2e/.data/e2e.db';
 
-/**
- * End-to-end tests run a real browser against the production build: Express serving the built
- * client and the API from one origin, exactly as the Docker image does. They need `npm run build`
- * first (the test:e2e script does it). The database is a separate file seeded fresh for each run,
- * so the tests never touch the development data.
- */
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,

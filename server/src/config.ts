@@ -4,15 +4,9 @@ import { z } from 'zod';
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/**
- * Environment is the only external input the process trusts at boot, so it is validated once,
- * here, and the process refuses to start on a bad value. A typo such as PORT=77o7 fails loudly
- * with the variable's name instead of surfacing later as `listen NaN`.
- */
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().min(0).max(65_535).default(7777),
-  // Unset means Node's default: every interface, IPv4 and IPv6 (so `localhost` works either way).
   HOST: z.string().min(1).optional(),
   DB_PATH: z
     .string()
@@ -29,11 +23,7 @@ const envSchema = z.object({
   SEED_USER_COUNT: z.coerce.number().int().min(1).max(1_000_000).default(10_000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(0).default(10_000),
-  // How many reverse proxies sit in front of the app. 0 (default) means clients connect
-  // directly and X-Forwarded-For is ignored, so nobody can spoof their IP past the rate limiter.
-  // Behind one proxy (Vercel, nginx, a load balancer) set 1.
   TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
-  // Requests per minute per client IP to the data endpoints. 0 disables the limiter.
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(0).default(600),
 });
 
@@ -44,7 +34,6 @@ function loadEnv(): z.infer<typeof envSchema> {
   const problems = result.error.issues
     .map((issue) => `  ${issue.path.join('.')}: ${issue.message}`)
     .join('\n');
-  // The logger is configured from this very object, so it cannot be used yet.
   console.error(`Invalid environment configuration:\n${problems}`);
   process.exit(1);
 }
