@@ -36,8 +36,3 @@ export function migrate(): void {
     }
   }
 }
-
-export function runMigrate(): void {
-  migrate();
-  logger.info({ version: schemaVersion() }, 'Schema is up to date');
-}

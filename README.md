@@ -53,7 +53,6 @@ On an older Node the server exits with an explanation instead of a stack trace.
 | ------------------------ | ------------------------------------------------------------------------ |
 | `npm run dev`            | API (watch mode) + client (HMR)                                          |
 | `npm run seed`           | Reset: drop, migrate and re-seed the database (deterministic)            |
-| `npm run migrate`        | Apply pending migrations only                                            |
 | `npm run build`          | Build client (Vite) and server (tsc)                                     |
 | `npm start`              | Production server: API + built client on :7777                           |
 | `npm test`               | Server (node:test) and client (Vitest) unit + integration tests          |
@@ -97,7 +96,7 @@ client/src
 └── components/   UserList (virtualized), UserCard, FilterSidebar, SearchField…
 
 server/src
-├── index.ts      entry: serve · seed · seal · migrate
+├── index.ts      entry: serve · seed · seal
 ├── config.ts     environment, validated at boot
 ├── db/           connection, versioned migrations, seed, seal
 ├── health/       GET /api/health (readiness)

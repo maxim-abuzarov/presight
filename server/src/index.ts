@@ -15,11 +15,6 @@ switch (task) {
     runSeal();
     break;
   }
-  case 'migrate': {
-    const { runMigrate } = await import('./db/migrate.js');
-    runMigrate();
-    break;
-  }
   case undefined:
   case 'serve': {
     const { start } = await import('./server.js');
@@ -28,7 +23,7 @@ switch (task) {
   }
   default: {
     const { logger } = await import('./shared/logger.js');
-    logger.fatal({ task }, 'Unknown task. Expected one of: serve, seed, seal, migrate.');
+    logger.fatal({ task }, 'Unknown task. Expected one of: serve, seed, seal.');
     process.exit(1);
   }
 }

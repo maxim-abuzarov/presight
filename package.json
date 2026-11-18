@@ -19,7 +19,6 @@
     "start": "npm -w app-server run start",
     "seed": "npm -w app-server run seed",
     "seal": "npm -w app-server run seal",
-    "migrate": "npm -w app-server run migrate",
     "test": "npm -w app-server run test && npm -w app-client run test",
     "test:coverage": "npm -w app-server run test:coverage && npm -w app-client run test:coverage",
     "test:e2e": "npm run build && playwright test",
