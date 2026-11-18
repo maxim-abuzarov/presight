@@ -1,3 +1,5 @@
+import { createServer } from 'node:http';
+
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { closeDb } from './db/connection.js';
@@ -7,16 +9,15 @@ import { logger } from './shared/logger.js';
 export function start(): void {
   migrate();
 
-  const app = createApp();
-  const onListening = () => {
+  const server = createServer(createApp());
+  server.on('listening', () => {
     logger.info(
       { port: config.port, dbPath: config.dbPath, readOnly: config.dbReadOnly },
       `API listening on http://localhost:${config.port}`,
     );
-  };
-  const server = config.host
-    ? app.listen(config.port, config.host, onListening)
-    : app.listen(config.port, onListening);
+  });
+  if (config.host) server.listen(config.port, config.host);
+  else server.listen(config.port);
 
   server.requestTimeout = 30_000;
   server.headersTimeout = 31_000;
