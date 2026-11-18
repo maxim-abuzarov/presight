@@ -4,10 +4,17 @@ import { createApp } from './app.js';
 import { config } from './config.js';
 import { closeDb } from './db/connection.js';
 import { migrate } from './db/migrate.js';
+import { runSeed, runSeedIfEmpty } from './db/seed.js';
 import { logger } from './shared/logger.js';
 
+function prepareDatabase(): void {
+  if (config.dbReadOnly) return migrate();
+  if (config.seedOnStart === 'always') return runSeed();
+  runSeedIfEmpty();
+}
+
 export function start(): void {
-  migrate();
+  prepareDatabase();
 
   const server = createServer(createApp());
   server.on('listening', () => {

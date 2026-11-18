@@ -39,7 +39,6 @@ COPY --from=prod-deps /app/package.json ./package.json
 COPY --from=build /app/server/package.json ./server/package.json
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/client/dist ./client/dist
-COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN mkdir -p /data && chown node:node /data
 VOLUME ["/data"]
@@ -51,5 +50,4 @@ EXPOSE 7777
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "dist/index.js"]

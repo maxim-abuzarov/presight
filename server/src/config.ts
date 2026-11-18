@@ -21,6 +21,7 @@ const envSchema = z.object({
     .min(1)
     .default(path.join(packageRoot, '..', 'client', 'dist')),
   SEED_USER_COUNT: z.coerce.number().int().min(1).max(1_000_000).default(10_000),
+  SEED_ON_START: z.enum(['if-empty', 'always']).default('if-empty'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(0).default(10_000),
   TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
@@ -55,6 +56,7 @@ export const config = {
   dbReadOnly: env.DB_READONLY,
   clientDist: env.CLIENT_DIST,
   seedUserCount: env.SEED_USER_COUNT,
+  seedOnStart: env.SEED_ON_START,
   logLevel: env.LOG_LEVEL ?? defaultLogLevel(),
   shutdownTimeoutMs: env.SHUTDOWN_TIMEOUT_MS,
   trustProxy: env.TRUST_PROXY,

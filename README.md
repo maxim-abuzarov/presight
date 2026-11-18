@@ -12,7 +12,7 @@ Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md). Live at
 - **SQLite** through Node's built-in `node:sqlite`: versioned migrations, constraints, indexes
 - **Production concerns**: structured JSON logs with request ids, readiness health check,
   security headers, rate limiting, compression, graceful shutdown, hardened Docker image
-- **Quality gate**: CI runs format, lint, types, 136 unit/integration tests, 20 end-to-end tests,
+- **Quality gate**: CI runs format, lint, types, 139 unit/integration tests, 20 end-to-end tests,
   a dependency audit and a container smoke test on every push
 
 ---
@@ -25,8 +25,9 @@ Built against the brief in [REQUIREMENTS.md](REQUIREMENTS.md). Live at
 docker compose up --build
 ```
 
-Open **http://localhost:7777**. The container migrates and seeds its database on first boot and
-reuses it afterwards. It is ready when `docker compose ps` shows `(healthy)`.
+Open **http://localhost:7777**. On start-up the server prepares its database: an empty database
+gets the schema and 10,000 users, an existing one only gets pending migrations. It is ready when
+`docker compose ps` shows `(healthy)`.
 
 ### Node
 
@@ -35,8 +36,7 @@ Needs **Node 22.5+** (`.nvmrc` pins 24.15.0) for the built-in `node:sqlite` modu
 ```bash
 nvm use
 npm install
-npm run seed     # creates server/data/presight.db (10,000 users, ~150ms)
-npm run dev      # API on :7777, then the client on :5555
+npm run dev      # API on :7777 (seeds server/data/presight.db on first start), then the client on :5555
 ```
 
 Open **http://localhost:5555**. `npm run dev` starts the API first and starts Vite only once
@@ -52,7 +52,7 @@ On an older Node the server exits with an explanation instead of a stack trace.
 | Command                  | What it does                                                             |
 | ------------------------ | ------------------------------------------------------------------------ |
 | `npm run dev`            | API (watch mode) + client (HMR)                                          |
-| `npm run seed`           | Drop, migrate and re-seed the database (deterministic)                   |
+| `npm run seed`           | Reset: drop, migrate and re-seed the database (deterministic)            |
 | `npm run migrate`        | Apply pending migrations only                                            |
 | `npm run build`          | Build client (Vite) and server (tsc)                                     |
 | `npm start`              | Production server: API + built client on :7777                           |
@@ -97,7 +97,7 @@ client/src
 └── components/   UserList (virtualized), UserCard, FilterSidebar, SearchField…
 
 server/src
-├── index.ts      entry: serve · seed · seed-if-empty · seal · migrate
+├── index.ts      entry: serve · seed · seal · migrate
 ├── config.ts     environment, validated at boot
 ├── db/           connection, versioned migrations, seed, seal
 ├── health/       GET /api/health (readiness)
@@ -132,6 +132,10 @@ api/index.mjs     Vercel entry: exports the same Express app
   requests and the Content-Security-Policy allows only `'self'`.
 - **The rate limiter is attached per route** (`/api/users`, `/api/facets`), not to the router:
   router-level middleware would also count avatar requests.
+- **The server prepares its own database on start-up**: an empty database gets the schema and
+  the demo data, an existing one only gets pending migrations, and only then does the server open
+  its port. `SEED_ON_START=always` resets the data on every start. In a real production system
+  there would be no demo data, and migrations would usually run as a separate deploy step.
 - **`node:sqlite` is synchronous.** A query runs to completion before any other JavaScript, so the
   count and the page of one request see the same data; the trade-off is that a slow query would
   block the event loop, which is why every filter and sort path is indexed and `pageSize` is
@@ -354,19 +358,19 @@ unchanged instead, with a volume at `/data`.
 Every variable has a working default and is validated at startup; an invalid value stops the
 process with a message naming the variable.
 
-| Variable                | Default                   |                                                        |
-| ----------------------- | ------------------------- | ------------------------------------------------------ |
-| `PORT`                  | `7777`                    |                                                        |
-| `HOST`                  | all interfaces            |                                                        |
-| `NODE_ENV`              | `development`             | `development` · `production` · `test`                  |
-| `DB_PATH`               | `server/data/presight.db` |                                                        |
-| `DB_READONLY`           | `0`                       | `1` opens read-only and only checks the schema version |
-| `CLIENT_DIST`           | `client/dist`             |                                                        |
-| `SEED_USER_COUNT`       | `10000`                   |                                                        |
-| `SEED_ON_START`         | unset                     | Docker only: `always` re-seeds on every start          |
-| `LOG_LEVEL`             | `debug` dev, `info` prod  | `fatal` … `trace`, `silent`                            |
-| `SHUTDOWN_TIMEOUT_MS`   | `10000`                   | forced exit if draining takes longer                   |
-| `TRUST_PROXY`           | `0`                       | number of reverse proxies in front (Vercel: `1`)       |
-| `RATE_LIMIT_PER_MINUTE` | `600`                     | per IP on the data endpoints; `0` disables             |
+| Variable                | Default                   |                                                                           |
+| ----------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| `PORT`                  | `7777`                    |                                                                           |
+| `HOST`                  | all interfaces            |                                                                           |
+| `NODE_ENV`              | `development`             | `development` · `production` · `test`                                     |
+| `DB_PATH`               | `server/data/presight.db` |                                                                           |
+| `DB_READONLY`           | `0`                       | `1` opens read-only and only checks the schema version                    |
+| `CLIENT_DIST`           | `client/dist`             |                                                                           |
+| `SEED_USER_COUNT`       | `10000`                   |                                                                           |
+| `SEED_ON_START`         | `if-empty`                | `if-empty` seeds only an empty database; `always` re-seeds on every start |
+| `LOG_LEVEL`             | `debug` dev, `info` prod  | `fatal` … `trace`, `silent`                                               |
+| `SHUTDOWN_TIMEOUT_MS`   | `10000`                   | forced exit if draining takes longer                                      |
+| `TRUST_PROXY`           | `0`                       | number of reverse proxies in front (Vercel: `1`)                          |
+| `RATE_LIMIT_PER_MINUTE` | `600`                     | per IP on the data endpoints; `0` disables                                |
 
 Easter eggs: search `presight`, or `peter parker`.

@@ -10,11 +10,6 @@ switch (task) {
     runSeed();
     break;
   }
-  case 'seed-if-empty': {
-    const { runSeedIfEmpty } = await import('./db/seed.js');
-    runSeedIfEmpty();
-    break;
-  }
   case 'seal': {
     const { runSeal } = await import('./db/seal.js');
     runSeal();
@@ -33,10 +28,7 @@ switch (task) {
   }
   default: {
     const { logger } = await import('./shared/logger.js');
-    logger.fatal(
-      { task },
-      'Unknown task. Expected one of: serve, seed, seed-if-empty, seal, migrate.',
-    );
+    logger.fatal({ task }, 'Unknown task. Expected one of: serve, seed, seal, migrate.');
     process.exit(1);
   }
 }
